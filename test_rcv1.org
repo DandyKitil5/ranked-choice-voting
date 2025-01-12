@@ -1,0 +1,566 @@
+#+TITLE: Problem 1 Basic RCV Function Tests
+#+TESTY: PREFIX="prob1"
+#+TESTY: USE_VALGRIND=1
+
+* vote_print_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_print_1'
+#+BEGIN_SRC sh
+IF_TEST("vote_print_1") {
+    // Test printing out a simple vote, 4 candidates
+    vote_t v = {
+      .id=5, .pos=0,
+      .candidate_order = {2, 1, 3, 0, NO_CANDIDATE}
+    };
+    vote_print(&v); printf("\n");
+}
+---OUTPUT---
+#0005:<2> 1  3  0 
+#+END_SRC
+
+* vote_print_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_print_2'
+#+BEGIN_SRC sh
+IF_TEST("vote_print_2") {
+    // Test printing out a simple vote, 5 candidates,
+    // pos set to 3
+    vote_t v = {
+      .id=123, .pos=3,
+      .candidate_order = {4, 1, 2, 0, 3, NO_CANDIDATE}
+    };
+    vote_print(&v); printf("\n");
+}
+---OUTPUT---
+#0123: 4  1  2 <0> 3 
+#+END_SRC
+
+* vote_print_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_print_3'
+#+BEGIN_SRC sh
+IF_TEST("vote_print_3") {
+    // Test printing out a simple vote, 6 candidates,
+    // pos set to after candidates so no < > printed
+    // as NO_CANDIDATE is indicated
+    vote_t v = {
+      .id=5026, .pos=6,
+      .candidate_order = {1, 4, 2, 5, 3, 0, NO_CANDIDATE}
+    };
+    vote_print(&v); printf("\n");
+}
+---OUTPUT---
+#5026: 1  4  2  5  3  0 
+#+END_SRC
+
+* vote_next_candidate_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_next_candidate_1'
+#+BEGIN_SRC sh
+IF_TEST("vote_next_candidate_1") {
+    // Single call to vote_next_candidate() to advance
+    // pos field to the next ACTIVE candidate which is
+    // in the next position of candidate_order[] field
+    vote_t v = {
+      .id=8, .pos=0,
+      .candidate_order = {1, 4, 2, 3, 0, NO_CANDIDATE}
+      //          status: M  A  A  D  A
+    };
+    char cand_status[] = {
+      CAND_ACTIVE,              // 0
+      CAND_MINVOTES,            // 1
+      CAND_ACTIVE,              // 2
+      CAND_DROPPED,             // 3
+      CAND_ACTIVE,              // 4
+    };
+    printf("0 Initial\n");
+    vote_print(&v); printf("\n");
+    int res = vote_next_candidate(&v, cand_status);
+    printf("1 After vote_next_candidate()\n");
+    vote_print(&v); printf("\n");
+    printf("res: %d\n",res);
+}
+---OUTPUT---
+0 Initial
+#0008:<1> 4  2  3  0 
+1 After vote_next_candidate()
+#0008: 1 <4> 2  3  0 
+res: 4
+#+END_SRC
+
+* vote_next_candidate_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_next_candidate_2'
+#+BEGIN_SRC sh
+IF_TEST("vote_next_candidate_2") {
+    // Call to vote_next_candidate() should advance
+    // pos 2 positions from 0 to 2 as candidate at
+    // pos 1 has status DROPPED so is ineligible for
+    // the vote to transfer to it.
+    vote_t v = {
+      .id=73, .pos=0,
+      .candidate_order = {1, 4, 2, 3, 0, NO_CANDIDATE}
+      //          status: M  D  A  A  A
+    };
+    char cand_status[] = {
+      CAND_ACTIVE,              // 0
+      CAND_MINVOTES,            // 1
+      CAND_ACTIVE,              // 2
+      CAND_ACTIVE,              // 3
+      CAND_DROPPED,             // 4
+    };
+    printf("0 Initial\n");
+    vote_print(&v); printf("\n");
+    int res = vote_next_candidate(&v, cand_status);
+    printf("1 After vote_next_candidate()\n");
+    vote_print(&v); printf("\n");
+    printf("res: %d\n",res);
+}
+---OUTPUT---
+0 Initial
+#0073:<1> 4  2  3  0 
+1 After vote_next_candidate()
+#0073: 1  4 <2> 3  0 
+res: 2
+#+END_SRC
+
+* vote_next_candidate_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_next_candidate_3'
+#+BEGIN_SRC sh
+IF_TEST("vote_next_candidate_3") {
+    // Call to vote_next_candidate() should advance
+    // several positions forward as the candidates
+    // after the intial pos are all DROPPED or
+    // MINVOTE with the only ACTIVE candidate
+    // towards the end of candidate_order[].
+    vote_t v = {
+      .id=924, .pos=1,
+      .candidate_order = {1, 2, 3, 0, 5, 4, NO_CANDIDATE}
+      //          status: D  M  M  D  A  A
+    };
+    char cand_status[] = {
+      CAND_DROPPED,             // 0
+      CAND_DROPPED,             // 1
+      CAND_MINVOTES,            // 2
+      CAND_MINVOTES,            // 3
+      CAND_ACTIVE,              // 4
+      CAND_ACTIVE,              // 5
+    };
+    printf("0 Initial\n");
+    vote_print(&v); printf("\n");
+    int res = vote_next_candidate(&v, cand_status);
+    printf("1 After vote_next_candidate()\n");
+    vote_print(&v); printf("\n");
+    printf("res: %d\n",res);
+}
+---OUTPUT---
+0 Initial
+#0924: 1 <2> 3  0  5  4 
+1 After vote_next_candidate()
+#0924: 1  2  3  0 <5> 4 
+res: 5
+#+END_SRC
+
+* vote_next_candidate_4
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_next_candidate_4'
+#+BEGIN_SRC sh
+IF_TEST("vote_next_candidate_4") {
+    // When calling on a vote with pos already at
+    // NO_CANDIDATE in candidate_order[], no
+    // changes are made by
+    // vote_next_candidate(). Function should
+    // return vale NO_CANDIDATE which is defined
+    // as integer constant -1.
+    vote_t v = {
+      .id=4891, .pos=3,
+      .candidate_order = {1, 2, 0, NO_CANDIDATE}
+      //          status: D  D  M
+    };
+    char cand_status[] = {
+      CAND_DROPPED,             // 0
+      CAND_DROPPED,             // 1
+      CAND_MINVOTES,            // 2
+    };
+    printf("0 Initial\n");
+    vote_print(&v); printf("\n");
+    int res = vote_next_candidate(&v, cand_status);
+    printf("1 After vote_next_candidate()\n");
+    vote_print(&v); printf("\n");
+    printf("res: %d\n",res);
+}
+---OUTPUT---
+0 Initial
+#4891: 1  2  0 
+1 After vote_next_candidate()
+#4891: 1  2  0 
+res: -1
+#+END_SRC
+
+* tally_print_table_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_print_table_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_print_table_1") {
+    // Print table results for 4 candidates, all
+    // candidates active
+    //              NAME      STATUS      VOTE_COUNT
+    tally_add(tally,"Francis",CAND_ACTIVE, 4); // 0
+    tally_add(tally,"Claire", CAND_ACTIVE, 1); // 1
+    tally_add(tally,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(tally,"Viktor", CAND_ACTIVE, 2); // 3
+    tally_print_table(tally);
+}
+---OUTPUT---
+NUM COUNT %PERC S NAME
+  0     4  57.1 A Francis
+  1     1  14.3 A Claire
+  2     0   0.0 A Heather
+  3     2  28.6 A Viktor
+#+END_SRC
+
+* tally_print_table_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_print_table_2'
+#+BEGIN_SRC sh
+IF_TEST("tally_print_table_2") {
+    // Print table results for 4 candidates, 2
+    // candidates dropped so count and percent are
+    // printed as "-"
+    //               NAME      STATUS      VOTE_COUNT
+    tally_add(tally, "Rick",   CAND_ACTIVE,  199); // 0
+    tally_add(tally, "Morty",  CAND_DROPPED,   0); // 1
+    tally_add(tally, "Summer", CAND_MINVOTES, 65); // 2
+    tally_add(tally, "Jerry",  CAND_DROPPED,   0); // 3
+    tally_add(tally, "Beth",   CAND_ACTIVE,   87); // 4
+    tally_print_table(tally);
+}
+---OUTPUT---
+NUM COUNT %PERC S NAME
+  0   199  56.7 A Rick
+  1     -     - D Morty
+  2    65  18.5 M Summer
+  3     -     - D Jerry
+  4    87  24.8 A Beth
+#+END_SRC
+
+* tally_print_table_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_print_table_3'
+#+BEGIN_SRC sh
+IF_TEST("tally_print_table_3") {
+    // Check special case of printing 100.0% and
+    // does print candidate with MINVOTE status
+    //               NAME          STATUS      VOTE_COUNT
+    tally_add(tally, "Squanchy",   CAND_MINVOTES,  0); // 0
+    tally_add(tally, "Gearhead",   CAND_DROPPED,   0); // 1
+    tally_add(tally, "Birdperson", CAND_ACTIVE,  725); // 2
+    tally_print_table(tally);
+}
+---OUTPUT---
+NUM COUNT %PERC S NAME
+  0     0   0.0 M Squanchy
+  1     -     - D Gearhead
+  2   725 100.0 A Birdperson
+#+END_SRC
+
+* tally_set_minvote_candidates_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_set_minvote_candidates_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_set_minvote_candidates_1"){
+    // Determine among 4 candidates which single
+    // candidate has the minimum number of votes
+    tally_add(tally,"Francis",CAND_ACTIVE, 8); // 0
+    tally_add(tally,"Claire", CAND_ACTIVE, 5); // 1
+    tally_add(tally,"Heather",CAND_ACTIVE, 2); // 2 - M
+    tally_add(tally,"Viktor", CAND_ACTIVE, 6); // 3
+    printf("0 Initial\n");
+    tally_print_table(tally);
+    tally_set_minvote_candidates(tally);
+    printf("1 After tally_set_minvote_candidates(tally)\n");
+    tally_print_table(tally);
+}
+---OUTPUT---
+0 Initial
+NUM COUNT %PERC S NAME
+  0     8  38.1 A Francis
+  1     5  23.8 A Claire
+  2     2   9.5 A Heather
+  3     6  28.6 A Viktor
+1 After tally_set_minvote_candidates(tally)
+NUM COUNT %PERC S NAME
+  0     8  38.1 A Francis
+  1     5  23.8 A Claire
+  2     2   9.5 M Heather
+  3     6  28.6 A Viktor
+#+END_SRC
+
+* tally_set_minvote_candidates_2
+Two situations which are more intense for
+tally_set_minvote_candidates() as described below.
+
+** Detect 3 candidates with Minvotes
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_set_minvote_candidates_2a'
+#+BEGIN_SRC sh
+IF_TEST("tally_set_minvote_candidates_2a"){
+    // Determine among 5 candidates which three
+    // candidates have the minimum number of votes
+    tally_add(tally,"Francis",CAND_ACTIVE, 4); // 0 - M
+    tally_add(tally,"Claire", CAND_ACTIVE,10); // 1
+    tally_add(tally,"Heather",CAND_ACTIVE,12); // 2
+    tally_add(tally,"Viktor", CAND_ACTIVE, 4); // 3 - M
+    tally_add(tally,"Tusk",   CAND_ACTIVE, 4); // 4 - M
+    printf("0 Initial\n");
+    tally_print_table(tally);
+    tally_set_minvote_candidates(tally);
+    printf("1 After tally_set_minvote_candidates(tally)\n");
+    tally_print_table(tally);
+}
+---OUTPUT---
+0 Initial
+NUM COUNT %PERC S NAME
+  0     4  11.8 A Francis
+  1    10  29.4 A Claire
+  2    12  35.3 A Heather
+  3     4  11.8 A Viktor
+  4     4  11.8 A Tusk
+1 After tally_set_minvote_candidates(tally)
+NUM COUNT %PERC S NAME
+  0     4  11.8 M Francis
+  1    10  29.4 A Claire
+  2    12  35.3 A Heather
+  3     4  11.8 M Viktor
+  4     4  11.8 M Tusk
+#+END_SRC
+
+** Skip Dropped Candidate when determining Minvotes
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_set_minvote_candidates_2b'
+#+BEGIN_SRC sh
+IF_TEST("tally_set_minvote_candidates_2b"){
+    // Determine among 6 candidates which two
+    // candidates have the Minimum number of votes
+    // ignoring the Dropped candidates. This test
+    // has a DROPPED candidate with a non-zero vote
+    // count to ensure that the candidate_status[]
+    // is used rather than 0 vote counts for
+    // dropping; it is not generally expected that
+    // a Dropped candidate will have non-zero votes
+    // in a real election.
+    tally_add(tally,"Francis",CAND_ACTIVE,   8); // 0
+    tally_add(tally,"Claire", CAND_ACTIVE,  10); // 1
+    tally_add(tally,"Heather",CAND_ACTIVE,   3); // 2 - M
+    tally_add(tally,"Viktor", CAND_DROPPED,  0); // 3
+    tally_add(tally,"Edmond", CAND_DROPPED,  2); // 4 - Tricky
+    tally_add(tally,"Doug",   CAND_ACTIVE,   3); // 5 - M
+    printf("0 Initial\n");
+    tally_print_table(tally);
+    tally_set_minvote_candidates(tally);
+    printf("1 After tally_set_minvote_candidates(tally)\n");
+    tally_print_table(tally);
+}
+---OUTPUT---
+0 Initial
+NUM COUNT %PERC S NAME
+  0     8  30.8 A Francis
+  1    10  38.5 A Claire
+  2     3  11.5 A Heather
+  3     -     - D Viktor
+  4     -     - D Edmond
+  5     3  11.5 A Doug
+1 After tally_set_minvote_candidates(tally)
+NUM COUNT %PERC S NAME
+  0     8  30.8 A Francis
+  1    10  38.5 A Claire
+  2     3  11.5 M Heather
+  3     -     - D Viktor
+  4     -     - D Edmond
+  5     3  11.5 M Doug
+#+END_SRC
+
+* tally_set_minvote_candidates_log
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_set_minvote_candidates_log'
+#+BEGIN_SRC sh
+IF_TEST("tally_set_minvote_candidates_log"){
+    // Similar to a previous check but sets
+    // LOG_LEVEL=LOG_MINVOTES which should print
+    // detailed information about the minimum vote
+    // determination including the minimum votes
+    // and the candidates which have the minimum
+    // votes.
+    LOG_LEVEL=LOG_MINVOTE;  // enable logging of minvote 
+    tally_add(tally,"Francis",CAND_ACTIVE, 4); // 0 - M
+    tally_add(tally,"Claire", CAND_ACTIVE,10); // 1
+    tally_add(tally,"Heather",CAND_ACTIVE,12); // 2
+    tally_add(tally,"Viktor", CAND_ACTIVE, 4); // 3 - M
+    tally_add(tally,"Tusk",   CAND_ACTIVE, 4); // 4 - M
+    printf("0 Initial\n");
+    tally_print_table(tally);
+    tally_set_minvote_candidates(tally);
+    printf("1 After tally_set_minvote_candidates(tally)\n");
+    tally_print_table(tally);
+}
+---OUTPUT---
+0 Initial
+NUM COUNT %PERC S NAME
+  0     4  11.8 A Francis
+  1    10  29.4 A Claire
+  2    12  35.3 A Heather
+  3     4  11.8 A Viktor
+  4     4  11.8 A Tusk
+LOG: MIN VOTE count is 4
+LOG: MIN VOTE COUNT for candidate 0: Francis
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+LOG: MIN VOTE COUNT for candidate 4: Tusk
+1 After tally_set_minvote_candidates(tally)
+NUM COUNT %PERC S NAME
+  0     4  11.8 M Francis
+  1    10  29.4 A Claire
+  2    12  35.3 A Heather
+  3     4  11.8 M Viktor
+  4     4  11.8 M Tusk
+#+END_SRC
+
+* tally_condition_continue_win
+
+** tally_condition_continue
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_condition_continue'
+#+BEGIN_SRC sh
+IF_TEST("tally_condition_continue"){
+    // 2 or more active candidates is a condition
+    // TALLY_CONTINUE : the election goes on; check
+    // several cases for this.
+    int ret;
+    tally_reset(tally);
+    tally_add(tally,"Francis",CAND_ACTIVE,  8); // 0
+    tally_add(tally,"Claire", CAND_DROPPED, 0); // 1
+    tally_add(tally,"Heather",CAND_MINVOTES,2); // 2
+    tally_add(tally,"Viktor", CAND_ACTIVE,  6); // 3
+    tally_add(tally,"Edmond", CAND_MINVOTES,2); // 4
+    ret = tally_condition(tally);
+    printf("CASE 1 ret: %s (%d)\n",condition2str(ret),ret);
+    tally_reset(tally);
+    tally_add(tally,"Ryu",    CAND_ACTIVE, 5); // 0
+    tally_add(tally,"Ken",    CAND_DROPPED,0); // 1
+    tally_add(tally,"Chun-Li",CAND_ACTIVE, 6); // 2
+    tally_add(tally,"Juri",   CAND_ACTIVE, 6); // 3
+    tally_add(tally,"Marissa",CAND_ACTIVE, 4); // 4
+    tally_add(tally,"Zangief",CAND_ACTIVE, 3); // 5
+    ret = tally_condition(tally);
+    printf("CASE 2 ret: %s (%d)\n",condition2str(ret),ret);
+}
+---OUTPUT---
+CASE 1 ret: TALLY_CONTINUE (4)
+CASE 2 ret: TALLY_CONTINUE (4)
+#+END_SRC
+
+** tally_condition_win
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_condition_win'
+#+BEGIN_SRC sh
+IF_TEST("tally_condition_win"){
+    // One active candidate is condition
+    // TALLY_WINNER : the election ends with a
+    // winner; check several cases for this.
+    int ret;
+    tally_reset(tally);
+    tally_add(tally,"Francis",CAND_DROPPED, 0); // 0
+    tally_add(tally,"Claire", CAND_ACTIVE,  8); // 1 - W
+    tally_add(tally,"Heather",CAND_MINVOTES,2); // 2
+    tally_add(tally,"Viktor", CAND_DROPPED, 0); // 3
+    tally_add(tally,"Edmond", CAND_MINVOTES,2); // 4
+    ret = tally_condition(tally);
+    printf("CASE 1 ret: %s (%d)\n",condition2str(ret),ret);
+    tally_reset(tally);
+    tally_add(tally,"Ryu",    CAND_DROPPED,0); // 0
+    tally_add(tally,"Ken",    CAND_DROPPED,0); // 1
+    tally_add(tally,"Chun-Li",CAND_DROPPED,0); // 2
+    tally_add(tally,"Juri",   CAND_DROPPED,0); // 3
+    tally_add(tally,"Marissa",CAND_DROPPED,0); // 4
+    tally_add(tally,"Zangief",CAND_ACTIVE, 6); // 5 - W
+    ret = tally_condition(tally);
+    printf("CASE 2 ret: %s (%d)\n",condition2str(ret),ret);
+}
+---OUTPUT---
+CASE 1 ret: TALLY_WINNER (2)
+CASE 2 ret: TALLY_WINNER (2)
+#+END_SRC
+
+* tally_condition_tie_error
+** tally_condition_tie_error
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_condition_tie'
+#+BEGIN_SRC sh
+IF_TEST("tally_condition_tie"){
+    // 0 ACTIVE candidates and multiple MINVOTE
+    // candidates is condition TALLY_TIE : the
+    // election ends with multi-way; check several
+    // cases for this.
+    int ret;
+    tally_reset(tally);
+    tally_add(tally,"Francis",CAND_MINVOTES, 5); // 0 - T
+    tally_add(tally,"Claire", CAND_DROPPED,  0); // 1
+    tally_add(tally,"Heather",CAND_DROPPED,  0); // 2
+    tally_add(tally,"Viktor", CAND_DROPPED,  0); // 3
+    tally_add(tally,"Edmond", CAND_MINVOTES, 5); // 4 - T
+    ret = tally_condition(tally);
+    printf("CASE 1 ret: %s (%d)\n",condition2str(ret),ret);
+    tally_reset(tally);
+    tally_add(tally,"Ryu",    CAND_DROPPED,  0); // 0
+    tally_add(tally,"Ken",    CAND_MINVOTES,12); // 1 - T
+    tally_add(tally,"Chun-Li",CAND_MINVOTES,12); // 2 - T
+    tally_add(tally,"Juri",   CAND_MINVOTES,12); // 3 - T
+    tally_add(tally,"Marissa",CAND_MINVOTES,12); // 4 - T
+    tally_add(tally,"Zangief",CAND_DROPPED,  0); // 5
+    ret = tally_condition(tally);
+    printf("CASE 2 ret: %s (%d)\n",condition2str(ret),ret);
+}
+---OUTPUT---
+CASE 1 ret: TALLY_TIE (3)
+CASE 2 ret: TALLY_TIE (3)
+#+END_SRC
+
+** tally_condition_error
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_condition_error'
+#+BEGIN_SRC sh
+IF_TEST("tally_condition_error"){
+    // Conditions that are not a CONTINUE, TIE, or
+    // WIN yield a TALLY_ERROR; check several
+    // cases for this.
+    int ret;
+    tally_reset(tally);
+    tally_add(tally,"Francis",CAND_DROPPED, 0); // 0
+    tally_add(tally,"Claire", CAND_DROPPED, 0); // 1
+    tally_add(tally,"Heather",CAND_DROPPED, 0); // 2
+    tally_add(tally,"Viktor", CAND_DROPPED, 0); // 3
+    tally_add(tally,"Edmond", CAND_DROPPED, 0); // 4
+    ret = tally_condition(tally);
+    printf("CASE 1 ret: %s (%d)\n",condition2str(ret),ret);
+    tally_reset(tally);
+    tally_add(tally,"Ryu",    CAND_DROPPED,  0); // 0
+    tally_add(tally,"Ken",    CAND_DROPPED,  0); // 1
+    tally_add(tally,"Chun-Li",CAND_DROPPED,  0); // 2
+    tally_add(tally,"Juri",   CAND_DROPPED,  0); // 3
+    tally_add(tally,"Marissa",CAND_MINVOTES, 2); // 4
+    tally_add(tally,"Zangief",CAND_DROPPED,  0); // 5
+    ret = tally_condition(tally);
+    printf("CASE 2 ret: %s (%d)\n",condition2str(ret),ret);
+    tally_reset(tally);
+    tally_add(tally,"Francis",CAND_DROPPED, 0); // 0
+    tally_add(tally,"Claire", CAND_UNKNOWN, 0); // 1
+    tally_add(tally,"Heather",CAND_DROPPED, 0); // 2
+    ret = tally_condition(tally);
+    printf("CASE 3 ret: %s (%d)\n",condition2str(ret),ret);
+}
+---OUTPUT---
+CASE 1 ret: TALLY_ERROR (1)
+CASE 2 ret: TALLY_ERROR (1)
+CASE 3 ret: TALLY_ERROR (1)
+#+END_SRC
+

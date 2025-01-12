@@ -1,0 +1,1298 @@
+#+TITLE: Makeup Credit Problem: Invalid Vote Handling
+#+TESTY: PREFIX="prob-makeup"
+#+TESTY: USE_VALGRIND=1
+
+* tally_main_votes-invalid1.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid1.txt
+ 12  45 142 data/votes-invalid1.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid1.txt~ which contains several
+votes that don't rank all candidates, just the first few choices with
+the remaining choices as -1 (NO_CANDIDATE).  This test checks that
+during the election, these votes print correctly. However, none of the
+votes with NO_CANDIDATE affect the election and no votes are even
+moved to the Invalid votes list. LOG_LEVEL is set to show all log
+messages which will print votes.
+
+#+TESTY: program='./rcv_main -log 10 data/votes-invalid1.txt'
+#+BEGIN_SRC sh
+LOG: File 'data/votes-invalid1.txt' opened
+LOG: File 'data/votes-invalid1.txt' has 4 candidtes
+LOG: File 'data/votes-invalid1.txt' candidate 0 is Francis
+LOG: File 'data/votes-invalid1.txt' candidate 1 is Claire
+LOG: File 'data/votes-invalid1.txt' candidate 2 is Heather
+LOG: File 'data/votes-invalid1.txt' candidate 3 is Viktor
+LOG: File 'data/votes-invalid1.txt' vote #0001:<0> 3  2  1 
+LOG: File 'data/votes-invalid1.txt' vote #0002:<1> 0  2 
+LOG: File 'data/votes-invalid1.txt' vote #0003:<2> 1  0  3 
+LOG: File 'data/votes-invalid1.txt' vote #0004:<1> 0  2  3 
+LOG: File 'data/votes-invalid1.txt' vote #0005:<0> 1  2 
+LOG: File 'data/votes-invalid1.txt' vote #0006:<2> 1  0  3 
+LOG: File 'data/votes-invalid1.txt' vote #0007:<2> 0 
+LOG: File 'data/votes-invalid1.txt' vote #0008:<3> 0  2  1 
+LOG: File 'data/votes-invalid1.txt' vote #0009:<0> 1  2  3 
+LOG: File 'data/votes-invalid1.txt' vote #0010:<2> 0  1  3 
+LOG: File 'data/votes-invalid1.txt' end of file reached
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3> 0  2  1 
+1 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+=== ROUND 2 ===
+LOG: Transferred Vote #0008: 3 <0> 2  1  from 3 Viktor to 0 Francis
+LOG: Dropped Candidate 3: Viktor
+NUM COUNT %PERC S NAME
+  0     4  40.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     -     - D Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2 
+  #0001:<0> 3  2  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 1: Claire
+=== ROUND 3 ===
+LOG: Transferred Vote #0004: 1 <0> 2  3  from 1 Claire to 0 Francis
+LOG: Transferred Vote #0002: 1 <0> 2  from 1 Claire to 0 Francis
+LOG: Dropped Candidate 1: Claire
+NUM COUNT %PERC S NAME
+  0     6  60.0 A Francis
+  1     -     - D Claire
+  2     4  40.0 A Heather
+  3     -     - D Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002: 1 <0> 2 
+  #0004: 1 <0> 2  3 
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2 
+  #0001:<0> 3  2  1 
+6 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: MIN VOTE count is 4
+LOG: MIN VOTE COUNT for candidate 2: Heather
+Winner: Francis (candidate 0)
+#+END_SRC
+
+* tally_main_votes-invalid2.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid2.txt
+ 12  45 152 data/votes-invalid2.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid2.txt~ which contains several
+votes which will be invalidated during the election.  Since the vote
+does not specify an order of all candidates, after a preferred
+candidate is dropped, some votes move to the Invalid Votes list as
+their next element in candidate_order[] is NO_CANDIDATE. LOG_LEVEL is
+set to show all log messages. Since the Invalid Vote list will have
+elements in it, this test checks that require functions handle these
+situations:
+- Votes with NO_CANDIDATE as their next choice are transferred to the
+  Invalid Vote list
+- Invalid Vote list it is printed with the vote lists for candidates.
+- Invalid Vote list is de-allocated when the tally is free()'d
+
+#+TESTY: program='./rcv_main -log 10 data/votes-invalid2.txt'
+#+BEGIN_SRC sh
+LOG: File 'data/votes-invalid2.txt' opened
+LOG: File 'data/votes-invalid2.txt' has 4 candidtes
+LOG: File 'data/votes-invalid2.txt' candidate 0 is Francis
+LOG: File 'data/votes-invalid2.txt' candidate 1 is Claire
+LOG: File 'data/votes-invalid2.txt' candidate 2 is Heather
+LOG: File 'data/votes-invalid2.txt' candidate 3 is Viktor
+LOG: File 'data/votes-invalid2.txt' vote #0001:<0> 3  2  1 
+LOG: File 'data/votes-invalid2.txt' vote #0002:<1> 0 
+LOG: File 'data/votes-invalid2.txt' vote #0003:<2> 1  0  3 
+LOG: File 'data/votes-invalid2.txt' vote #0004:<1>
+LOG: File 'data/votes-invalid2.txt' vote #0005:<0> 1  2  3 
+LOG: File 'data/votes-invalid2.txt' vote #0006:<2>
+LOG: File 'data/votes-invalid2.txt' vote #0007:<2> 0  1  3 
+LOG: File 'data/votes-invalid2.txt' vote #0008:<3>
+LOG: File 'data/votes-invalid2.txt' vote #0009:<0> 1  2  3 
+LOG: File 'data/votes-invalid2.txt' vote #0010:<2> 0  1  3 
+LOG: File 'data/votes-invalid2.txt' end of file reached
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1>
+  #0002:<1> 0 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2>
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3>
+1 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+=== ROUND 2 ===
+LOG: Transferred Vote #0008: 3  from 3 Viktor to Invalid Votes
+LOG: Dropped Candidate 3: Viktor
+NUM COUNT %PERC S NAME
+  0     3  33.3 A Francis
+  1     2  22.2 A Claire
+  2     4  44.4 A Heather
+  3     -     - D Viktor
+Invalid vote count: 1
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1>
+  #0002:<1> 0 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2>
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+INVALID VOTES
+  #0008: 3 
+1 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 1: Claire
+=== ROUND 3 ===
+LOG: Transferred Vote #0004: 1  from 1 Claire to Invalid Votes
+LOG: Transferred Vote #0002: 1 <0> from 1 Claire to 0 Francis
+LOG: Dropped Candidate 1: Claire
+NUM COUNT %PERC S NAME
+  0     4  50.0 A Francis
+  1     -     - D Claire
+  2     4  50.0 A Heather
+  3     -     - D Viktor
+Invalid vote count: 2
+VOTES FOR CANDIDATE 0: Francis
+  #0002: 1 <0>
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2>
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+INVALID VOTES
+  #0004: 1 
+  #0008: 3 
+2 votes total
+LOG: MIN VOTE count is 4
+LOG: MIN VOTE COUNT for candidate 0: Francis
+LOG: MIN VOTE COUNT for candidate 2: Heather
+Multiway Tie Between:
+Francis (candidate 0)
+Heather (candidate 2)
+#+END_SRC
+
+* tally_main_votes-invalid2-nolog.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid2.txt
+ 12  45 152 data/votes-invalid2.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid2.txt~ as in the previous test
+but sets the log level to 0. This should only print Invalid Vote
+counts when they are non-zero.
+#+TESTY: program='./rcv_main data/votes-invalid2.txt'
+#+BEGIN_SRC sh
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+=== ROUND 2 ===
+NUM COUNT %PERC S NAME
+  0     3  33.3 A Francis
+  1     2  22.2 A Claire
+  2     4  44.4 A Heather
+  3     -     - D Viktor
+Invalid vote count: 1
+=== ROUND 3 ===
+NUM COUNT %PERC S NAME
+  0     4  50.0 A Francis
+  1     -     - D Claire
+  2     4  50.0 A Heather
+  3     -     - D Viktor
+Invalid vote count: 2
+Multiway Tie Between:
+Francis (candidate 0)
+Heather (candidate 2)
+#+END_SRC
+
+* tally_main_votes-invalid3.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid3.txt
+ 12  45 152 data/votes-invalid3.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid3.txt~. This data file has some
+votes that are completely invalid (-1 for all of the candidate
+order). Such votes must be placed in the Invalid Vote list during
+tally_from_file() and the test checks that this happens correctly.
+
+
+#+TESTY: program='./rcv_main -log 10 data/votes-invalid3.txt'
+#+BEGIN_SRC sh
+LOG: File 'data/votes-invalid3.txt' opened
+LOG: File 'data/votes-invalid3.txt' has 4 candidtes
+LOG: File 'data/votes-invalid3.txt' candidate 0 is Francis
+LOG: File 'data/votes-invalid3.txt' candidate 1 is Claire
+LOG: File 'data/votes-invalid3.txt' candidate 2 is Heather
+LOG: File 'data/votes-invalid3.txt' candidate 3 is Viktor
+LOG: File 'data/votes-invalid3.txt' vote #0001:<0> 3  2  1 
+LOG: File 'data/votes-invalid3.txt' vote #0002:
+LOG: File 'data/votes-invalid3.txt' vote #0003:<2> 1  0  3 
+LOG: File 'data/votes-invalid3.txt' vote #0004:<1> 0  3 
+LOG: File 'data/votes-invalid3.txt' vote #0005:<0> 1  2  3 
+LOG: File 'data/votes-invalid3.txt' vote #0006:<2>
+LOG: File 'data/votes-invalid3.txt' vote #0007:<2> 0  1  3 
+LOG: File 'data/votes-invalid3.txt' vote #0008:<3>
+LOG: File 'data/votes-invalid3.txt' vote #0009:
+LOG: File 'data/votes-invalid3.txt' vote #0010:<2> 0  1  3 
+LOG: File 'data/votes-invalid3.txt' end of file reached
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     2  25.0 A Francis
+  1     1  12.5 A Claire
+  2     4  50.0 A Heather
+  3     1  12.5 A Viktor
+Invalid vote count: 2
+VOTES FOR CANDIDATE 0: Francis
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  3 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2>
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3>
+1 votes total
+INVALID VOTES
+  #0009:
+  #0002:
+2 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 1: Claire
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+=== ROUND 2 ===
+LOG: Transferred Vote #0004: 1 <0> 3  from 1 Claire to 0 Francis
+LOG: Dropped Candidate 1: Claire
+LOG: Transferred Vote #0008: 3  from 3 Viktor to Invalid Votes
+LOG: Dropped Candidate 3: Viktor
+NUM COUNT %PERC S NAME
+  0     3  42.9 A Francis
+  1     -     - D Claire
+  2     4  57.1 A Heather
+  3     -     - D Viktor
+Invalid vote count: 3
+VOTES FOR CANDIDATE 0: Francis
+  #0004: 1 <0> 3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2>
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+INVALID VOTES
+  #0008: 3 
+  #0009:
+  #0002:
+3 votes total
+LOG: MIN VOTE count is 3
+LOG: MIN VOTE COUNT for candidate 0: Francis
+Winner: Heather (candidate 2)
+#+END_SRC
+
+* tally_main_votes-invalid4.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid4.txt
+ 32 311 966 data/votes-invalid4.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid4.txt~ which has 10 candidates
+and 30 votes with many NO_CANDIDATE entries in the votes including
+some votes that will in the Invalid Vote list on loading them.
+
+#+TESTY: program='./rcv_main -log 10 data/votes-invalid4.txt'
+#+BEGIN_SRC sh
+LOG: File 'data/votes-invalid4.txt' opened
+LOG: File 'data/votes-invalid4.txt' has 10 candidtes
+LOG: File 'data/votes-invalid4.txt' candidate 0 is A2
+LOG: File 'data/votes-invalid4.txt' candidate 1 is 2B
+LOG: File 'data/votes-invalid4.txt' candidate 2 is 9S
+LOG: File 'data/votes-invalid4.txt' candidate 3 is Ni
+LOG: File 'data/votes-invalid4.txt' candidate 4 is Er
+LOG: File 'data/votes-invalid4.txt' candidate 5 is Au
+LOG: File 'data/votes-invalid4.txt' candidate 6 is To
+LOG: File 'data/votes-invalid4.txt' candidate 7 is Ma
+LOG: File 'data/votes-invalid4.txt' candidate 8 is Ta
+LOG: File 'data/votes-invalid4.txt' candidate 9 is YorHa
+LOG: File 'data/votes-invalid4.txt' vote #0001:<1> 3  9  4  2  8  5  7 
+LOG: File 'data/votes-invalid4.txt' vote #0002:<3> 6  7  2  9  1  0 
+LOG: File 'data/votes-invalid4.txt' vote #0003:<5> 8  3  7  0 
+LOG: File 'data/votes-invalid4.txt' vote #0004:<0> 2  8  3  1  5 
+LOG: File 'data/votes-invalid4.txt' vote #0005:<0> 4  1  7  9  6  3 
+LOG: File 'data/votes-invalid4.txt' vote #0006:
+LOG: File 'data/votes-invalid4.txt' vote #0007:<1> 4  3  0  8 
+LOG: File 'data/votes-invalid4.txt' vote #0008:<4> 9  6  2  5 
+LOG: File 'data/votes-invalid4.txt' vote #0009:<1> 3  4 
+LOG: File 'data/votes-invalid4.txt' vote #0010:<0> 7  9  6  3  5  4  1 
+LOG: File 'data/votes-invalid4.txt' vote #0011:<2> 3 
+LOG: File 'data/votes-invalid4.txt' vote #0012:<8> 1 
+LOG: File 'data/votes-invalid4.txt' vote #0013:<1> 2  3  8  0 
+LOG: File 'data/votes-invalid4.txt' vote #0014:<2> 8  9  0 
+LOG: File 'data/votes-invalid4.txt' vote #0015:<8> 9  5  0  1  2 
+LOG: File 'data/votes-invalid4.txt' vote #0016:<0>
+LOG: File 'data/votes-invalid4.txt' vote #0017:<4> 2  3  1  8  6  7  5  0 
+LOG: File 'data/votes-invalid4.txt' vote #0018:<1> 5  9  3  6  2  8  0  7  4 
+LOG: File 'data/votes-invalid4.txt' vote #0019:<0> 1  6  8 
+LOG: File 'data/votes-invalid4.txt' vote #0020:<2> 3  1  7  9 
+LOG: File 'data/votes-invalid4.txt' vote #0021:<4>
+LOG: File 'data/votes-invalid4.txt' vote #0022:
+LOG: File 'data/votes-invalid4.txt' vote #0023:<3> 5  1  9  6  4 
+LOG: File 'data/votes-invalid4.txt' vote #0024:<6> 5  8  3  1  9  4  7  2 
+LOG: File 'data/votes-invalid4.txt' vote #0025:<1>
+LOG: File 'data/votes-invalid4.txt' vote #0026:
+LOG: File 'data/votes-invalid4.txt' vote #0027:
+LOG: File 'data/votes-invalid4.txt' vote #0028:<7> 0  1  9 
+LOG: File 'data/votes-invalid4.txt' vote #0029:<2> 9  1  5  3  8  4 
+LOG: File 'data/votes-invalid4.txt' vote #0030:<0> 8  5  2  6 
+LOG: File 'data/votes-invalid4.txt' end of file reached
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     6  23.1 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     1   3.8 A Au
+  6     1   3.8 A To
+  7     1   3.8 A Ma
+  8     2   7.7 A Ta
+  9     0   0.0 A YorHa
+Invalid vote count: 4
+VOTES FOR CANDIDATE 0: A2
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+6 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+6 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+4 votes total
+VOTES FOR CANDIDATE 3: Ni
+  #0023:<3> 5  1  9  6  4 
+  #0002:<3> 6  7  2  9  1  0 
+2 votes total
+VOTES FOR CANDIDATE 4: Er
+  #0021:<4>
+  #0017:<4> 2  3  1  8  6  7  5  0 
+  #0008:<4> 9  6  2  5 
+3 votes total
+VOTES FOR CANDIDATE 5: Au
+  #0003:<5> 8  3  7  0 
+1 votes total
+VOTES FOR CANDIDATE 6: To
+  #0024:<6> 5  8  3  1  9  4  7  2 
+1 votes total
+VOTES FOR CANDIDATE 7: Ma
+  #0028:<7> 0  1  9 
+1 votes total
+VOTES FOR CANDIDATE 8: Ta
+  #0015:<8> 9  5  0  1  2 
+  #0012:<8> 1 
+2 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+4 votes total
+LOG: MIN VOTE count is 0
+LOG: MIN VOTE COUNT for candidate 9: YorHa
+=== ROUND 2 ===
+LOG: Dropped Candidate 9: YorHa
+NUM COUNT %PERC S NAME
+  0     6  23.1 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     1   3.8 A Au
+  6     1   3.8 A To
+  7     1   3.8 A Ma
+  8     2   7.7 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+VOTES FOR CANDIDATE 0: A2
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+6 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+6 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+4 votes total
+VOTES FOR CANDIDATE 3: Ni
+  #0023:<3> 5  1  9  6  4 
+  #0002:<3> 6  7  2  9  1  0 
+2 votes total
+VOTES FOR CANDIDATE 4: Er
+  #0021:<4>
+  #0017:<4> 2  3  1  8  6  7  5  0 
+  #0008:<4> 9  6  2  5 
+3 votes total
+VOTES FOR CANDIDATE 5: Au
+  #0003:<5> 8  3  7  0 
+1 votes total
+VOTES FOR CANDIDATE 6: To
+  #0024:<6> 5  8  3  1  9  4  7  2 
+1 votes total
+VOTES FOR CANDIDATE 7: Ma
+  #0028:<7> 0  1  9 
+1 votes total
+VOTES FOR CANDIDATE 8: Ta
+  #0015:<8> 9  5  0  1  2 
+  #0012:<8> 1 
+2 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+4 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 5: Au
+LOG: MIN VOTE COUNT for candidate 6: To
+LOG: MIN VOTE COUNT for candidate 7: Ma
+=== ROUND 3 ===
+LOG: Transferred Vote #0003: 5 <8> 3  7  0  from 5 Au to 8 Ta
+LOG: Dropped Candidate 5: Au
+LOG: Transferred Vote #0024: 6  5 <8> 3  1  9  4  7  2  from 6 To to 8 Ta
+LOG: Dropped Candidate 6: To
+LOG: Transferred Vote #0028: 7 <0> 1  9  from 7 Ma to 0 A2
+LOG: Dropped Candidate 7: Ma
+NUM COUNT %PERC S NAME
+  0     7  26.9 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  15.4 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+VOTES FOR CANDIDATE 0: A2
+  #0028: 7 <0> 1  9 
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+7 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+6 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+4 votes total
+VOTES FOR CANDIDATE 3: Ni
+  #0023:<3> 5  1  9  6  4 
+  #0002:<3> 6  7  2  9  1  0 
+2 votes total
+VOTES FOR CANDIDATE 4: Er
+  #0021:<4>
+  #0017:<4> 2  3  1  8  6  7  5  0 
+  #0008:<4> 9  6  2  5 
+3 votes total
+VOTES FOR CANDIDATE 5: Au
+0 votes total
+VOTES FOR CANDIDATE 6: To
+0 votes total
+VOTES FOR CANDIDATE 7: Ma
+0 votes total
+VOTES FOR CANDIDATE 8: Ta
+  #0024: 6  5 <8> 3  1  9  4  7  2 
+  #0003: 5 <8> 3  7  0 
+  #0015:<8> 9  5  0  1  2 
+  #0012:<8> 1 
+4 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+4 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 3: Ni
+=== ROUND 4 ===
+LOG: Transferred Vote #0023: 3  5 <1> 9  6  4  from 3 Ni to 1 2B
+LOG: Transferred Vote #0002: 3  6  7 <2> 9  1  0  from 3 Ni to 2 9S
+LOG: Dropped Candidate 3: Ni
+NUM COUNT %PERC S NAME
+  0     7  26.9 A A2
+  1     7  26.9 A 2B
+  2     5  19.2 A 9S
+  3     -     - D Ni
+  4     3  11.5 A Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  15.4 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+VOTES FOR CANDIDATE 0: A2
+  #0028: 7 <0> 1  9 
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+7 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0023: 3  5 <1> 9  6  4 
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+7 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0002: 3  6  7 <2> 9  1  0 
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+5 votes total
+VOTES FOR CANDIDATE 3: Ni
+0 votes total
+VOTES FOR CANDIDATE 4: Er
+  #0021:<4>
+  #0017:<4> 2  3  1  8  6  7  5  0 
+  #0008:<4> 9  6  2  5 
+3 votes total
+VOTES FOR CANDIDATE 5: Au
+0 votes total
+VOTES FOR CANDIDATE 6: To
+0 votes total
+VOTES FOR CANDIDATE 7: Ma
+0 votes total
+VOTES FOR CANDIDATE 8: Ta
+  #0024: 6  5 <8> 3  1  9  4  7  2 
+  #0003: 5 <8> 3  7  0 
+  #0015:<8> 9  5  0  1  2 
+  #0012:<8> 1 
+4 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+4 votes total
+LOG: MIN VOTE count is 3
+LOG: MIN VOTE COUNT for candidate 4: Er
+=== ROUND 5 ===
+LOG: Transferred Vote #0021: 4  from 4 Er to Invalid Votes
+LOG: Transferred Vote #0017: 4 <2> 3  1  8  6  7  5  0  from 4 Er to 2 9S
+LOG: Transferred Vote #0008: 4  9  6 <2> 5  from 4 Er to 2 9S
+LOG: Dropped Candidate 4: Er
+NUM COUNT %PERC S NAME
+  0     7  28.0 A A2
+  1     7  28.0 A 2B
+  2     7  28.0 A 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  16.0 A Ta
+  9     -     - D YorHa
+Invalid vote count: 5
+VOTES FOR CANDIDATE 0: A2
+  #0028: 7 <0> 1  9 
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+7 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0023: 3  5 <1> 9  6  4 
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+7 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0008: 4  9  6 <2> 5 
+  #0017: 4 <2> 3  1  8  6  7  5  0 
+  #0002: 3  6  7 <2> 9  1  0 
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+7 votes total
+VOTES FOR CANDIDATE 3: Ni
+0 votes total
+VOTES FOR CANDIDATE 4: Er
+0 votes total
+VOTES FOR CANDIDATE 5: Au
+0 votes total
+VOTES FOR CANDIDATE 6: To
+0 votes total
+VOTES FOR CANDIDATE 7: Ma
+0 votes total
+VOTES FOR CANDIDATE 8: Ta
+  #0024: 6  5 <8> 3  1  9  4  7  2 
+  #0003: 5 <8> 3  7  0 
+  #0015:<8> 9  5  0  1  2 
+  #0012:<8> 1 
+4 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0021: 4 
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+5 votes total
+LOG: MIN VOTE count is 4
+LOG: MIN VOTE COUNT for candidate 8: Ta
+=== ROUND 6 ===
+LOG: Transferred Vote #0024: 6  5  8  3 <1> 9  4  7  2  from 8 Ta to 1 2B
+LOG: Transferred Vote #0003: 5  8  3  7 <0> from 8 Ta to 0 A2
+LOG: Transferred Vote #0015: 8  9  5 <0> 1  2  from 8 Ta to 0 A2
+LOG: Transferred Vote #0012: 8 <1> from 8 Ta to 1 2B
+LOG: Dropped Candidate 8: Ta
+NUM COUNT %PERC S NAME
+  0     9  36.0 A A2
+  1     9  36.0 A 2B
+  2     7  28.0 A 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     -     - D Ta
+  9     -     - D YorHa
+Invalid vote count: 5
+VOTES FOR CANDIDATE 0: A2
+  #0015: 8  9  5 <0> 1  2 
+  #0003: 5  8  3  7 <0>
+  #0028: 7 <0> 1  9 
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+9 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0012: 8 <1>
+  #0024: 6  5  8  3 <1> 9  4  7  2 
+  #0023: 3  5 <1> 9  6  4 
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+9 votes total
+VOTES FOR CANDIDATE 2: 9S
+  #0008: 4  9  6 <2> 5 
+  #0017: 4 <2> 3  1  8  6  7  5  0 
+  #0002: 3  6  7 <2> 9  1  0 
+  #0029:<2> 9  1  5  3  8  4 
+  #0020:<2> 3  1  7  9 
+  #0014:<2> 8  9  0 
+  #0011:<2> 3 
+7 votes total
+VOTES FOR CANDIDATE 3: Ni
+0 votes total
+VOTES FOR CANDIDATE 4: Er
+0 votes total
+VOTES FOR CANDIDATE 5: Au
+0 votes total
+VOTES FOR CANDIDATE 6: To
+0 votes total
+VOTES FOR CANDIDATE 7: Ma
+0 votes total
+VOTES FOR CANDIDATE 8: Ta
+0 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0021: 4 
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+5 votes total
+LOG: MIN VOTE count is 7
+LOG: MIN VOTE COUNT for candidate 2: 9S
+=== ROUND 7 ===
+LOG: Transferred Vote #0008: 4  9  6  2  5  from 2 9S to Invalid Votes
+LOG: Transferred Vote #0017: 4  2  3 <1> 8  6  7  5  0  from 2 9S to 1 2B
+LOG: Transferred Vote #0002: 3  6  7  2  9 <1> 0  from 2 9S to 1 2B
+LOG: Transferred Vote #0029: 2  9 <1> 5  3  8  4  from 2 9S to 1 2B
+LOG: Transferred Vote #0020: 2  3 <1> 7  9  from 2 9S to 1 2B
+LOG: Transferred Vote #0014: 2  8  9 <0> from 2 9S to 0 A2
+LOG: Transferred Vote #0011: 2  3  from 2 9S to Invalid Votes
+LOG: Dropped Candidate 2: 9S
+NUM COUNT %PERC S NAME
+  0    10  43.5 A A2
+  1    13  56.5 A 2B
+  2     -     - D 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     -     - D Ta
+  9     -     - D YorHa
+Invalid vote count: 7
+VOTES FOR CANDIDATE 0: A2
+  #0014: 2  8  9 <0>
+  #0015: 8  9  5 <0> 1  2 
+  #0003: 5  8  3  7 <0>
+  #0028: 7 <0> 1  9 
+  #0030:<0> 8  5  2  6 
+  #0019:<0> 1  6  8 
+  #0016:<0>
+  #0010:<0> 7  9  6  3  5  4  1 
+  #0005:<0> 4  1  7  9  6  3 
+  #0004:<0> 2  8  3  1  5 
+10 votes total
+VOTES FOR CANDIDATE 1: 2B
+  #0020: 2  3 <1> 7  9 
+  #0029: 2  9 <1> 5  3  8  4 
+  #0002: 3  6  7  2  9 <1> 0 
+  #0017: 4  2  3 <1> 8  6  7  5  0 
+  #0012: 8 <1>
+  #0024: 6  5  8  3 <1> 9  4  7  2 
+  #0023: 3  5 <1> 9  6  4 
+  #0025:<1>
+  #0018:<1> 5  9  3  6  2  8  0  7  4 
+  #0013:<1> 2  3  8  0 
+  #0009:<1> 3  4 
+  #0007:<1> 4  3  0  8 
+  #0001:<1> 3  9  4  2  8  5  7 
+13 votes total
+VOTES FOR CANDIDATE 2: 9S
+0 votes total
+VOTES FOR CANDIDATE 3: Ni
+0 votes total
+VOTES FOR CANDIDATE 4: Er
+0 votes total
+VOTES FOR CANDIDATE 5: Au
+0 votes total
+VOTES FOR CANDIDATE 6: To
+0 votes total
+VOTES FOR CANDIDATE 7: Ma
+0 votes total
+VOTES FOR CANDIDATE 8: Ta
+0 votes total
+VOTES FOR CANDIDATE 9: YorHa
+0 votes total
+INVALID VOTES
+  #0011: 2  3 
+  #0008: 4  9  6  2  5 
+  #0021: 4 
+  #0027:
+  #0026:
+  #0022:
+  #0006:
+7 votes total
+LOG: MIN VOTE count is 10
+LOG: MIN VOTE COUNT for candidate 0: A2
+Winner: 2B (candidate 1)
+#+END_SRC
+
+Run the test again with LOG_LEVEL 0 to ensure that invalid votes are
+not printed unconditionally.
+#+TESTY: program='./rcv_main data/votes-invalid4.txt'
+#+BEGIN_SRC sh
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     6  23.1 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     1   3.8 A Au
+  6     1   3.8 A To
+  7     1   3.8 A Ma
+  8     2   7.7 A Ta
+  9     0   0.0 A YorHa
+Invalid vote count: 4
+=== ROUND 2 ===
+NUM COUNT %PERC S NAME
+  0     6  23.1 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     1   3.8 A Au
+  6     1   3.8 A To
+  7     1   3.8 A Ma
+  8     2   7.7 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+=== ROUND 3 ===
+NUM COUNT %PERC S NAME
+  0     7  26.9 A A2
+  1     6  23.1 A 2B
+  2     4  15.4 A 9S
+  3     2   7.7 A Ni
+  4     3  11.5 A Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  15.4 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+=== ROUND 4 ===
+NUM COUNT %PERC S NAME
+  0     7  26.9 A A2
+  1     7  26.9 A 2B
+  2     5  19.2 A 9S
+  3     -     - D Ni
+  4     3  11.5 A Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  15.4 A Ta
+  9     -     - D YorHa
+Invalid vote count: 4
+=== ROUND 5 ===
+NUM COUNT %PERC S NAME
+  0     7  28.0 A A2
+  1     7  28.0 A 2B
+  2     7  28.0 A 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     4  16.0 A Ta
+  9     -     - D YorHa
+Invalid vote count: 5
+=== ROUND 6 ===
+NUM COUNT %PERC S NAME
+  0     9  36.0 A A2
+  1     9  36.0 A 2B
+  2     7  28.0 A 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     -     - D Ta
+  9     -     - D YorHa
+Invalid vote count: 5
+=== ROUND 7 ===
+NUM COUNT %PERC S NAME
+  0    10  43.5 A A2
+  1    13  56.5 A 2B
+  2     -     - D 9S
+  3     -     - D Ni
+  4     -     - D Er
+  5     -     - D Au
+  6     -     - D To
+  7     -     - D Ma
+  8     -     - D Ta
+  9     -     - D YorHa
+Invalid vote count: 7
+Winner: 2B (candidate 1)
+#+END_SRC
+
+* tally_main_votes-invalid5.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid5.txt
+  302  3613 14777 data/votes-invalid5.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid5.txt~ which has 12 candidates
+and 300 votes with many NO_CANDIDATE entries in the votes including
+some votes that will in the Invalid Vote list on loading them. No
+logging is done due to the size of output it would gennerate.
+
+#+TESTY: program='./rcv_main data/votes-invalid5.txt'
+#+BEGIN_SRC sh
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0    12   4.3 A Red
+  1    23   8.3 A Orange
+  2    24   8.7 A Yellow
+  3    25   9.0 A Green
+  4    24   8.7 A Blue
+  5    24   8.7 A Violet
+  6    23   8.3 A White
+  7    25   9.0 A Black
+  8    27   9.7 A Grey
+  9    24   8.7 A Pink
+ 10    31  11.2 A Brown
+ 11    15   5.4 A Turquoise
+Invalid vote count: 23
+=== ROUND 2 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1    24   8.7 A Orange
+  2    28  10.1 A Yellow
+  3    25   9.1 A Green
+  4    25   9.1 A Blue
+  5    24   8.7 A Violet
+  6    23   8.3 A White
+  7    26   9.4 A Black
+  8    27   9.8 A Grey
+  9    24   8.7 A Pink
+ 10    32  11.6 A Brown
+ 11    18   6.5 A Turquoise
+Invalid vote count: 24
+=== ROUND 3 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1    25   9.1 A Orange
+  2    30  10.9 A Yellow
+  3    26   9.5 A Green
+  4    27   9.8 A Blue
+  5    26   9.5 A Violet
+  6    25   9.1 A White
+  7    27   9.8 A Black
+  8    28  10.2 A Grey
+  9    26   9.5 A Pink
+ 10    35  12.7 A Brown
+ 11     -     - D Turquoise
+Invalid vote count: 25
+=== ROUND 4 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2    35  12.9 A Yellow
+  3    31  11.4 A Green
+  4    33  12.1 A Blue
+  5    31  11.4 A Violet
+  6     -     - D White
+  7    33  12.1 A Black
+  8    33  12.1 A Grey
+  9    34  12.5 A Pink
+ 10    42  15.4 A Brown
+ 11     -     - D Turquoise
+Invalid vote count: 28
+=== ROUND 5 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2    45  17.2 A Yellow
+  3     -     - D Green
+  4    41  15.6 A Blue
+  5     -     - D Violet
+  6     -     - D White
+  7    42  16.0 A Black
+  8    46  17.6 A Grey
+  9    42  16.0 A Pink
+ 10    46  17.6 A Brown
+ 11     -     - D Turquoise
+Invalid vote count: 38
+=== ROUND 6 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2    46  18.3 A Yellow
+  3     -     - D Green
+  4     -     - D Blue
+  5     -     - D Violet
+  6     -     - D White
+  7    50  19.8 A Black
+  8    54  21.4 A Grey
+  9    51  20.2 A Pink
+ 10    51  20.2 A Brown
+ 11     -     - D Turquoise
+Invalid vote count: 48
+=== ROUND 7 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2     -     - D Yellow
+  3     -     - D Green
+  4     -     - D Blue
+  5     -     - D Violet
+  6     -     - D White
+  7    62  25.8 A Black
+  8    62  25.8 A Grey
+  9    60  25.0 A Pink
+ 10    56  23.3 A Brown
+ 11     -     - D Turquoise
+Invalid vote count: 60
+=== ROUND 8 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2     -     - D Yellow
+  3     -     - D Green
+  4     -     - D Blue
+  5     -     - D Violet
+  6     -     - D White
+  7    72  32.1 A Black
+  8    81  36.2 A Grey
+  9    71  31.7 A Pink
+ 10     -     - D Brown
+ 11     -     - D Turquoise
+Invalid vote count: 76
+=== ROUND 9 ===
+NUM COUNT %PERC S NAME
+  0     -     - D Red
+  1     -     - D Orange
+  2     -     - D Yellow
+  3     -     - D Green
+  4     -     - D Blue
+  5     -     - D Violet
+  6     -     - D White
+  7    94  46.8 A Black
+  8   107  53.2 A Grey
+  9     -     - D Pink
+ 10     -     - D Brown
+ 11     -     - D Turquoise
+Invalid vote count: 99
+Winner: Grey (candidate 8)
+#+END_SRC
+
+* tally_main_votes-0-valid.txt
+Data File Check: Ensure that the required data file is present. If
+this portion of the test fails, the data/ directory or required file
+may be missing.
+#+TESTY: use_valgrind=0
+#+BEGIN_SRC sh
+>> wc data/votes-invalid-0-valid.txt
+ 14  54 183 data/votes-invalid-0-valid.txt
+#+END_SRC
+
+Runs ~rcv_main~ on ~data/votes-invalid-0-valid.txt~ which contains
+pathological data: all votes are invalid as they contain all -1
+entries.  This leads to there being 0 total valid votes and requires
+special handling in to print a table of results. "nan" for the
+candidate percentage indicates that this special handling is missing. 
+
+#+TESTY: program='./rcv_main -log 10 data/votes-invalid-0-valid.txt'
+#+BEGIN_SRC sh
+LOG: File 'data/votes-invalid-0-valid.txt' opened
+LOG: File 'data/votes-invalid-0-valid.txt' has 5 candidtes
+LOG: File 'data/votes-invalid-0-valid.txt' candidate 0 is Francis
+LOG: File 'data/votes-invalid-0-valid.txt' candidate 1 is Claire
+LOG: File 'data/votes-invalid-0-valid.txt' candidate 2 is Heather
+LOG: File 'data/votes-invalid-0-valid.txt' candidate 3 is Viktor
+LOG: File 'data/votes-invalid-0-valid.txt' candidate 4 is Edmond
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0001:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0002:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0003:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0004:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0005:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0006:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0007:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0008:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0009:
+LOG: File 'data/votes-invalid-0-valid.txt' vote #0010:
+LOG: File 'data/votes-invalid-0-valid.txt' end of file reached
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     0   0.0 A Francis
+  1     0   0.0 A Claire
+  2     0   0.0 A Heather
+  3     0   0.0 A Viktor
+  4     0   0.0 A Edmond
+Invalid vote count: 10
+VOTES FOR CANDIDATE 0: Francis
+0 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+VOTES FOR CANDIDATE 4: Edmond
+0 votes total
+INVALID VOTES
+  #0010:
+  #0009:
+  #0008:
+  #0007:
+  #0006:
+  #0005:
+  #0004:
+  #0003:
+  #0002:
+  #0001:
+10 votes total
+LOG: MIN VOTE count is 0
+LOG: MIN VOTE COUNT for candidate 0: Francis
+LOG: MIN VOTE COUNT for candidate 1: Claire
+LOG: MIN VOTE COUNT for candidate 2: Heather
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+LOG: MIN VOTE COUNT for candidate 4: Edmond
+Multiway Tie Between:
+Francis (candidate 0)
+Claire (candidate 1)
+Heather (candidate 2)
+Viktor (candidate 3)
+Edmond (candidate 4)
+#+END_SRC
+

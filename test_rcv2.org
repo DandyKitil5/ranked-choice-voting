@@ -1,0 +1,2218 @@
+#+TITLE: Problem 3 Tally Allocation / Printing / Manipulation 
+#+TESTY: PREFIX="prob3"
+#+TESTY: USE_VALGRIND=1
+
+* vote_make_empty
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs vote_make_empty'
+#+BEGIN_SRC sh
+IF_TEST("vote_make_empty"){
+    // Check basic functionality of vote creation
+    // via heap allocation
+    vote_t *vote = vote_make_empty();
+    vote->id = 251;
+    vote->pos = 2;
+    vote->candidate_order[0] = 3;
+    vote->candidate_order[1] = 0;
+    vote->candidate_order[2] = 4;
+    vote->candidate_order[3] = 2;
+    vote->candidate_order[4] = 1;
+    vote->candidate_order[5] = NO_CANDIDATE;
+    printf("vote: ");
+    vote_print(vote); 
+    printf("\n");
+    vote_t *empty = vote_make_empty();
+    printf("empty { id: %d, pos: %d, next: %p\n",
+           empty->id, empty->pos, empty->next);
+    printf("        candidate_order[]: {\n");
+    for(int i=0; i<MAX_CANDIDATES; i++){
+      printf("           [%d]: %d\n",
+             i,empty->candidate_order[i]);
+    }
+    printf("        }\n}\n");
+    free(vote);
+    free(empty);
+}
+---OUTPUT---
+vote: #0251: 3  0 <4> 2  1 
+empty { id: -1, pos: -1, next: (nil)
+        candidate_order[]: {
+           [0]: -1
+           [1]: -1
+           [2]: -1
+           [3]: -1
+           [4]: -1
+           [5]: -1
+           [6]: -1
+           [7]: -1
+           [8]: -1
+           [9]: -1
+           [10]: -1
+           [11]: -1
+           [12]: -1
+           [13]: -1
+           [14]: -1
+           [15]: -1
+           [16]: -1
+           [17]: -1
+           [18]: -1
+           [19]: -1
+           [20]: -1
+           [21]: -1
+           [22]: -1
+           [23]: -1
+           [24]: -1
+           [25]: -1
+           [26]: -1
+           [27]: -1
+           [28]: -1
+           [29]: -1
+           [30]: -1
+           [31]: -1
+           [32]: -1
+           [33]: -1
+           [34]: -1
+           [35]: -1
+           [36]: -1
+           [37]: -1
+           [38]: -1
+           [39]: -1
+           [40]: -1
+           [41]: -1
+           [42]: -1
+           [43]: -1
+           [44]: -1
+           [45]: -1
+           [46]: -1
+           [47]: -1
+           [48]: -1
+           [49]: -1
+           [50]: -1
+           [51]: -1
+           [52]: -1
+           [53]: -1
+           [54]: -1
+           [55]: -1
+           [56]: -1
+           [57]: -1
+           [58]: -1
+           [59]: -1
+           [60]: -1
+           [61]: -1
+           [62]: -1
+           [63]: -1
+           [64]: -1
+           [65]: -1
+           [66]: -1
+           [67]: -1
+           [68]: -1
+           [69]: -1
+           [70]: -1
+           [71]: -1
+           [72]: -1
+           [73]: -1
+           [74]: -1
+           [75]: -1
+           [76]: -1
+           [77]: -1
+           [78]: -1
+           [79]: -1
+           [80]: -1
+           [81]: -1
+           [82]: -1
+           [83]: -1
+           [84]: -1
+           [85]: -1
+           [86]: -1
+           [87]: -1
+           [88]: -1
+           [89]: -1
+           [90]: -1
+           [91]: -1
+           [92]: -1
+           [93]: -1
+           [94]: -1
+           [95]: -1
+           [96]: -1
+           [97]: -1
+           [98]: -1
+           [99]: -1
+           [100]: -1
+           [101]: -1
+           [102]: -1
+           [103]: -1
+           [104]: -1
+           [105]: -1
+           [106]: -1
+           [107]: -1
+           [108]: -1
+           [109]: -1
+           [110]: -1
+           [111]: -1
+           [112]: -1
+           [113]: -1
+           [114]: -1
+           [115]: -1
+           [116]: -1
+           [117]: -1
+           [118]: -1
+           [119]: -1
+           [120]: -1
+           [121]: -1
+           [122]: -1
+           [123]: -1
+           [124]: -1
+           [125]: -1
+           [126]: -1
+           [127]: -1
+     }
+}
+#+END_SRC
+
+* tally_add_vote_print_free_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_add_vote_print_free_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_add_vote_print_free_1"){
+    // Create a tally with 4 candidates then print
+    // it; each candidate has 0 votes. Then add 3
+    // votes to it, 1 vote for candidate 0, 2 votes
+    // for candidate 2. Print the tally table and
+    // votes show placement is correct.
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0, 1 vote
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1, 0 votes
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2, 2 votes
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3, 0 votes
+    printf("CASE 1: Tally with 0 votes\n");
+    tally_print_votes(t);
+    tally_add_vote(t,vote_make( 1,0,0,3,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,0,1,3,NO_CANDIDATE)); 
+    printf("\nCASE 2: 1 vote for candidate 0, 2 for candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: De-allocate the tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: Tally with 0 votes
+VOTES FOR CANDIDATE 0: Francis
+0 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 2: 1 vote for candidate 0, 2 for candidate 2
+NUM COUNT %PERC S NAME
+  0     1  33.3 A Francis
+  1     0   0.0 A Claire
+  2     2  66.7 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0001:<0> 3  2  1 
+1 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0003:<2> 0  1  3 
+  #0002:<2> 1  0  3 
+2 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: De-allocate the tally
+DONE
+#+END_SRC
+
+* tally_add_vote_print_free_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_add_vote_print_free_2'
+#+BEGIN_SRC sh
+IF_TEST("tally_add_vote_print_free_2"){
+    // Create a larger tally with 4 candidates and
+    // 10 total votes spread across each of
+    // them. Print table/votes to show votes added
+    // to the correct candidates.
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,3,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 5,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 8,0,3,0,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_free(t);
+}
+---OUTPUT---
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3> 0  2  1 
+1 votes total
+#+END_SRC
+
+* tally_add_vote_print_free_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_add_vote_print_free_3'
+#+BEGIN_SRC sh
+IF_TEST("tally_add_vote_print_free_3"){
+    // Larger tally with 8 candidates 20 votes
+    // added via repeated calls
+    // tally_add_vote(). tally_print_votes() called
+    // midway and at end; tally free()'d at end.
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    char *cands[] = {"A","B","C","D","E","F","G","H",NULL};
+    for(int i=0; cands[i]!=NULL; i++){
+      tally_add(t,cands[i],CAND_ACTIVE,0);
+    }
+    tally_add_vote(t,vote_make( 1,0,3,6,1,0,4,2,5,7,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 2,0,7,3,2,1,0,6,5,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 3,0,0,4,6,2,7,1,5,3,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 4,0,4,0,3,6,2,1,7,5,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 5,0,2,5,0,1,4,7,3,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 6,0,7,0,6,3,4,5,1,2,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 7,0,0,5,3,4,1,7,2,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 8,0,3,4,0,7,6,2,5,1,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 9,0,7,5,2,3,1,0,4,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(10,0,1,6,5,2,3,4,7,0,NO_CANDIDATE));
+    printf("CASE 1: 10 votes added\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_add_vote(t,vote_make(11,0,2,0,3,7,1,5,6,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(12,0,2,1,4,6,7,0,5,3,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(13,0,5,0,4,3,1,6,2,7,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(14,0,4,1,3,5,2,6,7,0,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(15,0,0,1,3,4,6,5,7,2,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(16,0,7,5,2,1,3,6,4,0,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(17,0,7,5,1,3,2,0,6,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(18,0,3,0,2,6,7,4,5,1,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(19,0,3,6,7,4,1,0,2,5,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(20,0,4,2,3,0,6,1,5,7,NO_CANDIDATE));
+    printf("\nCASE 2: 20 votes added\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: 10 votes added
+NUM COUNT %PERC S NAME
+  0     2  20.0 A A
+  1     1  10.0 A B
+  2     1  10.0 A C
+  3     2  20.0 A D
+  4     1  10.0 A E
+  5     0   0.0 A F
+  6     0   0.0 A G
+  7     3  30.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+2 votes total
+VOTES FOR CANDIDATE 1: B
+  #0010:<1> 6  5  2  3  4  7  0 
+1 votes total
+VOTES FOR CANDIDATE 2: C
+  #0005:<2> 5  0  1  4  7  3  6 
+1 votes total
+VOTES FOR CANDIDATE 3: D
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+2 votes total
+VOTES FOR CANDIDATE 4: E
+  #0004:<4> 0  3  6  2  1  7  5 
+1 votes total
+VOTES FOR CANDIDATE 5: F
+0 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+3 votes total
+
+CASE 2: 20 votes added
+NUM COUNT %PERC S NAME
+  0     3  15.0 A A
+  1     1   5.0 A B
+  2     3  15.0 A C
+  3     4  20.0 A D
+  4     3  15.0 A E
+  5     1   5.0 A F
+  6     0   0.0 A G
+  7     5  25.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0015:<0> 1  3  4  6  5  7  2 
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+3 votes total
+VOTES FOR CANDIDATE 1: B
+  #0010:<1> 6  5  2  3  4  7  0 
+1 votes total
+VOTES FOR CANDIDATE 2: C
+  #0012:<2> 1  4  6  7  0  5  3 
+  #0011:<2> 0  3  7  1  5  6  4 
+  #0005:<2> 5  0  1  4  7  3  6 
+3 votes total
+VOTES FOR CANDIDATE 3: D
+  #0019:<3> 6  7  4  1  0  2  5 
+  #0018:<3> 0  2  6  7  4  5  1 
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+4 votes total
+VOTES FOR CANDIDATE 4: E
+  #0020:<4> 2  3  0  6  1  5  7 
+  #0014:<4> 1  3  5  2  6  7  0 
+  #0004:<4> 0  3  6  2  1  7  5 
+3 votes total
+VOTES FOR CANDIDATE 5: F
+  #0013:<5> 0  4  3  1  6  2  7 
+1 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0017:<7> 5  1  3  2  0  6  4 
+  #0016:<7> 5  2  1  3  6  4  0 
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+5 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_1"){
+    // Moves a single vote from candidate 2
+    // (Heather) to candidate 1 (Claire) with
+    // Candidate 1 has 1 vote to which the second
+    // is added. Tests proper handling of a single
+    // node destination list.
+    // LOG_LEVEL=LOG_VOTE_TRANSFERS so that
+    // additional information is printed when votes
+    // are transferred.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0, 2 votes
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1, 1 vote
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2, vote to 1
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,2,1,3,0,NO_CANDIDATE)); 
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // Heather's vote to Claire
+    printf("\nCASE 2: after transfer of vote from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     2  50.0 A Francis
+  1     1  25.0 A Claire
+  2     1  25.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0003:<1> 2  3  0 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0004:<2> 1  3  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: Transferred Vote #0004: 2 <1> 3  0  from 2 Heather to 1 Claire
+
+CASE 2: after transfer of vote from candidate 2
+NUM COUNT %PERC S NAME
+  0     2  50.0 A Francis
+  1     2  50.0 A Claire
+  2     0   0.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004: 2 <1> 3  0 
+  #0003:<1> 2  3  0 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_2'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_2"){
+    // Moves a single vote from candidate 2
+    // (Heather) to candidate 1 (Claire) with
+    // Candidate 1 having 0 votes (empty list) to
+    // begin with. Tests proper handling of a NULL
+    // destination list.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2, vote to 1
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,3,0,NO_CANDIDATE)); 
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // Heather's vote to Claire
+    printf("\nCASE 2: after transfer of vote from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     2  66.7 A Francis
+  1     0   0.0 A Claire
+  2     1  33.3 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0003:<2> 1  3  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: Transferred Vote #0003: 2 <1> 3  0  from 2 Heather to 1 Claire
+
+CASE 2: after transfer of vote from candidate 2
+NUM COUNT %PERC S NAME
+  0     2  66.7 A Francis
+  1     1  33.3 A Claire
+  2     0   0.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0003: 2 <1> 3  0 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_3'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_3"){
+    // Ensure that transfering a vote from a
+    // candidate with 0 votes (empty vote list)
+    // does not cause problems. This situation is
+    // not expected to occur in an actual election
+    // but is a requirement of the transfer
+    // function for robustness.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2, vote to 1
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,3,0,NO_CANDIDATE)); 
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // Heather's vote to Claire
+    printf("\nCASE 2: after transfer of vote from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     2  66.7 A Francis
+  1     0   0.0 A Claire
+  2     1  33.3 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0003:<2> 1  3  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: Transferred Vote #0003: 2 <1> 3  0  from 2 Heather to 1 Claire
+
+CASE 2: after transfer of vote from candidate 2
+NUM COUNT %PERC S NAME
+  0     2  66.7 A Francis
+  1     1  33.3 A Claire
+  2     0   0.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0003: 2 <1> 3  0 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_4
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_4'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_4"){
+    // Tests several successive transfers from 2
+    // different candidates. Transfer logging is
+    // enabled.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS; // enable transfer logging
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,3,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 5,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 8,0,3,0,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,2,0,1,3,NO_CANDIDATE)); 
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,3); // Victor's vote to Francis
+    printf("\nCASE 2: after transfer from candidate 3\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,1);   // Claire's votes to Francis
+    tally_transfer_first_vote(t,1);
+    printf("\nCASE 3: after transfer from candidate 1\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 4: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3> 0  2  1 
+1 votes total
+LOG: Transferred Vote #0008: 3 <0> 2  1  from 3 Viktor to 0 Francis
+
+CASE 2: after transfer from candidate 3
+NUM COUNT %PERC S NAME
+  0     4  40.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: Transferred Vote #0004: 1 <0> 2  3  from 1 Claire to 0 Francis
+LOG: Transferred Vote #0002: 1 <0> 2  3  from 1 Claire to 0 Francis
+
+CASE 3: after transfer from candidate 1
+NUM COUNT %PERC S NAME
+  0     6  60.0 A Francis
+  1     0   0.0 A Claire
+  2     4  40.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002: 1 <0> 2  3 
+  #0004: 1 <0> 2  3 
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+6 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 4: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_5
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_5'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_5"){
+    // Like tally_transfer_first_vote_4 but with
+    // the LOG_LEVEL=0 so that none of the trnasfer
+    // log messsages are printed.
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,3,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 5,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 8,0,3,0,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,2,0,1,3,NO_CANDIDATE)); 
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,3); // Victor's vote to Francis
+    printf("\nCASE 2: after transfer from candidate 3\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,1);   // Claire's votes to Francis
+    tally_transfer_first_vote(t,1);
+    printf("\nCASE 3: after transfer from candidate 1\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 4: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     3  30.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     1  10.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3> 0  2  1 
+1 votes total
+
+CASE 2: after transfer from candidate 3
+NUM COUNT %PERC S NAME
+  0     4  40.0 A Francis
+  1     2  20.0 A Claire
+  2     4  40.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: after transfer from candidate 1
+NUM COUNT %PERC S NAME
+  0     6  60.0 A Francis
+  1     0   0.0 A Claire
+  2     4  40.0 A Heather
+  3     0   0.0 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002: 1 <0> 2  3 
+  #0004: 1 <0> 2  3 
+  #0008: 3 <0> 2  1 
+  #0009:<0> 1  2  3 
+  #0005:<0> 1  2  3 
+  #0001:<0> 3  2  1 
+6 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0010:<2> 0  1  3 
+  #0007:<2> 0  1  3 
+  #0006:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 4: freeing tally
+DONE
+#+END_SRC
+
+* tally_transfer_first_vote_6
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_transfer_first_vote_6'
+#+BEGIN_SRC sh
+IF_TEST("tally_transfer_first_vote_6"){
+    // Tests proper transfer when votes must "skip"
+    // dropped candidates. vote_next_candidate()
+    // must return an ACTIVE candidate which will
+    // be the transfer target and this code tests
+    // that return value is used during transfers.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,   0); // 0
+    tally_add(t,"Claire", CAND_DROPPED,  0); // 1
+    tally_add(t,"Heather",CAND_MINVOTES, 0); // 2
+    tally_add(t,"Viktor", CAND_MINVOTES, 0); // 3
+    tally_add(t,"Edmond", CAND_ACTIVE,   0); // 4
+    tally_add_vote(t,vote_make( 1,0,2,3,1,4,0,NO_CANDIDATE)); // 2, skip 3, skip 1, 4
+    tally_add_vote(t,vote_make( 2,0,2,3,4,1,0,NO_CANDIDATE)); // 2, skip 3, 4
+    tally_add_vote(t,vote_make( 3,0,2,1,0,3,4,NO_CANDIDATE)); // 2, skip 1, 0
+    tally_add_vote(t,vote_make( 4,0,0,1,2,3,4,NO_CANDIDATE)); // for 0
+    tally_add_vote(t,vote_make( 5,0,0,1,2,3,4,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,0,1,2,3,4,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,4,1,2,3,0,NO_CANDIDATE)); // for 4
+    tally_add_vote(t,vote_make( 8,0,4,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,4,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,3,4,1,2,0,NO_CANDIDATE)); // for 3
+    tally_add_vote(t,vote_make(11,1,1,3,2,0,4,NO_CANDIDATE)); // 2nd choice
+    tally_add_vote(t,vote_make(12,1,1,3,4,2,0,NO_CANDIDATE)); // 2nd choice
+    printf("CASE 1: before transfer\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // 2->1 skip->0
+    printf("\nCASE 2: 1st transfer from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // 2->3 skip->4
+    printf("\nCASE 3: 2nd transfer from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,2); // 2->3 skip->1 skip->4
+    printf("\nCASE 4: 3rd transfer from candidate 2\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,3); // (1)->3->4
+    printf("\nCASE 5: 1st transfer from candidate 3\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_transfer_first_vote(t,3); // (1)->3->2 skip->0
+    printf("\nCASE 6: 2nd transfer from candidate 3\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 7: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before transfer
+NUM COUNT %PERC S NAME
+  0     3  25.0 A Francis
+  1     -     - D Claire
+  2     3  25.0 M Heather
+  3     3  25.0 M Viktor
+  4     3  25.0 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+3 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0003:<2> 1  0  3  4 
+  #0002:<2> 3  4  1  0 
+  #0001:<2> 3  1  4  0 
+3 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0012: 1 <3> 4  2  0 
+  #0011: 1 <3> 2  0  4 
+  #0010:<3> 4  1  2  0 
+3 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+3 votes total
+LOG: Transferred Vote #0003: 2  1 <0> 3  4  from 2 Heather to 0 Francis
+
+CASE 2: 1st transfer from candidate 2
+NUM COUNT %PERC S NAME
+  0     4  33.3 A Francis
+  1     -     - D Claire
+  2     2  16.7 M Heather
+  3     3  25.0 M Viktor
+  4     3  25.0 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0003: 2  1 <0> 3  4 
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0002:<2> 3  4  1  0 
+  #0001:<2> 3  1  4  0 
+2 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0012: 1 <3> 4  2  0 
+  #0011: 1 <3> 2  0  4 
+  #0010:<3> 4  1  2  0 
+3 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+3 votes total
+LOG: Transferred Vote #0002: 2  3 <4> 1  0  from 2 Heather to 4 Edmond
+
+CASE 3: 2nd transfer from candidate 2
+NUM COUNT %PERC S NAME
+  0     4  33.3 A Francis
+  1     -     - D Claire
+  2     1   8.3 M Heather
+  3     3  25.0 M Viktor
+  4     4  33.3 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0003: 2  1 <0> 3  4 
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0001:<2> 3  1  4  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0012: 1 <3> 4  2  0 
+  #0011: 1 <3> 2  0  4 
+  #0010:<3> 4  1  2  0 
+3 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0002: 2  3 <4> 1  0 
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+4 votes total
+LOG: Transferred Vote #0001: 2  3  1 <4> 0  from 2 Heather to 4 Edmond
+
+CASE 4: 3rd transfer from candidate 2
+NUM COUNT %PERC S NAME
+  0     4  33.3 A Francis
+  1     -     - D Claire
+  2     0   0.0 M Heather
+  3     3  25.0 M Viktor
+  4     5  41.7 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0003: 2  1 <0> 3  4 
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0012: 1 <3> 4  2  0 
+  #0011: 1 <3> 2  0  4 
+  #0010:<3> 4  1  2  0 
+3 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0001: 2  3  1 <4> 0 
+  #0002: 2  3 <4> 1  0 
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+5 votes total
+LOG: Transferred Vote #0012: 1  3 <4> 2  0  from 3 Viktor to 4 Edmond
+
+CASE 5: 1st transfer from candidate 3
+NUM COUNT %PERC S NAME
+  0     4  33.3 A Francis
+  1     -     - D Claire
+  2     0   0.0 M Heather
+  3     2  16.7 M Viktor
+  4     6  50.0 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0003: 2  1 <0> 3  4 
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0011: 1 <3> 2  0  4 
+  #0010:<3> 4  1  2  0 
+2 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0012: 1  3 <4> 2  0 
+  #0001: 2  3  1 <4> 0 
+  #0002: 2  3 <4> 1  0 
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+6 votes total
+LOG: Transferred Vote #0011: 1  3  2 <0> 4  from 3 Viktor to 0 Francis
+
+CASE 6: 2nd transfer from candidate 3
+NUM COUNT %PERC S NAME
+  0     5  41.7 A Francis
+  1     -     - D Claire
+  2     0   0.0 M Heather
+  3     1   8.3 M Viktor
+  4     6  50.0 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0011: 1  3  2 <0> 4 
+  #0003: 2  1 <0> 3  4 
+  #0006:<0> 1  2  3  4 
+  #0005:<0> 1  2  3  4 
+  #0004:<0> 1  2  3  4 
+5 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0010:<3> 4  1  2  0 
+1 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0012: 1  3 <4> 2  0 
+  #0001: 2  3  1 <4> 0 
+  #0002: 2  3 <4> 1  0 
+  #0009:<4> 1  2  3  0 
+  #0008:<4> 1  2  3  0 
+  #0007:<4> 1  2  3  0 
+6 votes total
+
+CASE 7: freeing tally
+DONE
+#+END_SRC
+
+* tally_drop_minvote_candidates_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_drop_minvote_candidates_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_drop_minvote_candidates_1"){
+    // Drop a minvotes candidate with 0 votes. No
+    // votes need to be transferred. Logging is
+    // enabled to print that the drop.
+    LOG_LEVEL=LOG_DROP_MINVOTES;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,  0); // 0, 1 votes
+    tally_add(t,"Claire", CAND_ACTIVE,  0); // 1, 1 votes
+    tally_add(t,"Heather",CAND_MINVOTES,0); // 2, 0 votes
+    tally_add(t,"Viktor", CAND_ACTIVE,  0); // 3, 1 votes
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,3,1,2,0,NO_CANDIDATE)); 
+    printf("CASE 1: before drop minvotes\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_drop_minvote_candidates(t); // 2: Heather dropped
+    printf("\nCASE 2: after 2: Heather dropped\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before drop minvotes
+NUM COUNT %PERC S NAME
+  0     1  33.3 A Francis
+  1     1  33.3 A Claire
+  2     0   0.0 M Heather
+  3     1  33.3 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0001:<0> 2  3  1 
+1 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0002:<1> 2  3  0 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0003:<3> 1  2  0 
+1 votes total
+LOG: Dropped Candidate 2: Heather
+
+CASE 2: after 2: Heather dropped
+NUM COUNT %PERC S NAME
+  0     1  33.3 A Francis
+  1     1  33.3 A Claire
+  2     -     - D Heather
+  3     1  33.3 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0001:<0> 2  3  1 
+1 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0002:<1> 2  3  0 
+1 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0003:<3> 1  2  0 
+1 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_drop_minvote_candidates_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_drop_minvote_candidates_2'
+#+BEGIN_SRC sh
+IF_TEST("tally_drop_minvote_candidates_2"){
+    // Drop a minvotes candidate with 1
+    // vote. Logging of vote transfers is enabled
+    // so that both the drop and the transfer
+    // should be printed.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,  0); // 0, 2 votes
+    tally_add(t,"Claire", CAND_ACTIVE,  0); // 1, 2 votes
+    tally_add(t,"Heather",CAND_MINVOTES,0); // 2, 1 votes
+    tally_add(t,"Viktor", CAND_ACTIVE,  0); // 3, 2 votes
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 2,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 3,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 4,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make( 5,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make( 6,0,2,1,3,0,NO_CANDIDATE)); // 2
+    printf("CASE 1: before drop minvotes\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_drop_minvote_candidates(t); // 2: Heather dropped
+    printf("\nCASE 2: after 2: Heather dropped\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before drop minvotes
+NUM COUNT %PERC S NAME
+  0     2  28.6 A Francis
+  1     2  28.6 A Claire
+  2     1  14.3 M Heather
+  3     2  28.6 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0001:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0003:<1> 2  3  0 
+  #0002:<1> 2  3  0 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0006:<2> 1  3  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0005:<3> 1  2  0 
+  #0004:<3> 1  2  0 
+2 votes total
+LOG: Transferred Vote #0006: 2 <1> 3  0  from 2 Heather to 1 Claire
+LOG: Dropped Candidate 2: Heather
+
+CASE 2: after 2: Heather dropped
+NUM COUNT %PERC S NAME
+  0     2  28.6 A Francis
+  1     3  42.9 A Claire
+  2     -     - D Heather
+  3     2  28.6 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0001:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0006: 2 <1> 3  0 
+  #0003:<1> 2  3  0 
+  #0002:<1> 2  3  0 
+3 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0005:<3> 1  2  0 
+  #0004:<3> 1  2  0 
+2 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_drop_minvote_candidates_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_drop_minvote_candidates_3'
+#+BEGIN_SRC sh
+IF_TEST("tally_drop_minvote_candidates_3"){
+    // Drop a minvotes candidate with several
+    // votes. Tests that the dropping iteratively
+    // transfers votes from the dropped candidate
+    // to others.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,  0); // 0, 4 votes
+    tally_add(t,"Claire", CAND_MINVOTES,0); // 1, 3 votes
+    tally_add(t,"Heather",CAND_ACTIVE,  0); // 2, 4 votes
+    tally_add(t,"Viktor", CAND_ACTIVE,  0); // 3, 4 votes
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 2,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 3,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 4,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 5,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 6,0,1,0,3,2,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 7,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 8,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make( 9,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(10,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(11,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(12,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(13,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(14,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(15,0,3,1,2,0,NO_CANDIDATE)); // 3
+    printf("CASE 1: before drop minvotes\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_drop_minvote_candidates(t); // 1: Claire dropped
+    printf("\nCASE 2: after 1: Claire dropped\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before drop minvotes
+NUM COUNT %PERC S NAME
+  0     4  26.7 A Francis
+  1     3  20.0 M Claire
+  2     4  26.7 A Heather
+  3     4  26.7 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0004:<0> 2  3  1 
+  #0003:<0> 2  3  1 
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0007:<1> 2  3  0 
+  #0006:<1> 0  3  2 
+  #0005:<1> 2  3  0 
+3 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0011:<2> 1  3  0 
+  #0010:<2> 1  3  0 
+  #0009:<2> 1  3  0 
+  #0008:<2> 1  3  0 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0015:<3> 1  2  0 
+  #0014:<3> 1  2  0 
+  #0013:<3> 1  2  0 
+  #0012:<3> 1  2  0 
+4 votes total
+LOG: Transferred Vote #0007: 1 <2> 3  0  from 1 Claire to 2 Heather
+LOG: Transferred Vote #0006: 1 <0> 3  2  from 1 Claire to 0 Francis
+LOG: Transferred Vote #0005: 1 <2> 3  0  from 1 Claire to 2 Heather
+LOG: Dropped Candidate 1: Claire
+
+CASE 2: after 1: Claire dropped
+NUM COUNT %PERC S NAME
+  0     5  33.3 A Francis
+  1     -     - D Claire
+  2     6  40.0 A Heather
+  3     4  26.7 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0006: 1 <0> 3  2 
+  #0004:<0> 2  3  1 
+  #0003:<0> 2  3  1 
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+5 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0005: 1 <2> 3  0 
+  #0007: 1 <2> 3  0 
+  #0011:<2> 1  3  0 
+  #0010:<2> 1  3  0 
+  #0009:<2> 1  3  0 
+  #0008:<2> 1  3  0 
+6 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0015:<3> 1  2  0 
+  #0014:<3> 1  2  0 
+  #0013:<3> 1  2  0 
+  #0012:<3> 1  2  0 
+4 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_drop_minvote_candidates_4
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_drop_minvote_candidates_4'
+#+BEGIN_SRC sh
+IF_TEST("tally_drop_minvote_candidates_4"){
+    // Drop 2 minvotes candidate each with several
+    // votes. Tests that the dropping iteratively
+    // transfers votes from the dropped candidate
+    // to others and that multiple candidates are
+    // handled. Several votes from candidate 3
+    // would transfer to candidate 1 but they are
+    // both being dropped so those votes should
+    // advance further to either candidate 0 or 2.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,  0); // 0, 4 votes
+    tally_add(t,"Claire", CAND_MINVOTES,0); // 1, 3 votes
+    tally_add(t,"Heather",CAND_ACTIVE,  0); // 2, 4 votes
+    tally_add(t,"Viktor", CAND_MINVOTES,0); // 3, 3 votes
+    tally_add_vote(t,vote_make( 1,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 2,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 3,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 4,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 5,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 6,0,1,0,3,2,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 7,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 8,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make( 9,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(10,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(11,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make(12,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(13,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(14,0,3,0,2,1,NO_CANDIDATE)); // 3
+    printf("CASE 1: before drop minvotes\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_drop_minvote_candidates(t); // 1: Claire+Viktor dropped
+    printf("\nCASE 2: after 1: Claire dropped\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before drop minvotes
+NUM COUNT %PERC S NAME
+  0     4  28.6 A Francis
+  1     3  21.4 M Claire
+  2     4  28.6 A Heather
+  3     3  21.4 M Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0004:<0> 2  3  1 
+  #0003:<0> 2  3  1 
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0007:<1> 2  3  0 
+  #0006:<1> 0  3  2 
+  #0005:<1> 2  3  0 
+3 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0011:<2> 1  3  0 
+  #0010:<2> 1  3  0 
+  #0009:<2> 1  3  0 
+  #0008:<2> 1  3  0 
+4 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0014:<3> 0  2  1 
+  #0013:<3> 1  2  0 
+  #0012:<3> 1  2  0 
+3 votes total
+LOG: Transferred Vote #0007: 1 <2> 3  0  from 1 Claire to 2 Heather
+LOG: Transferred Vote #0006: 1 <0> 3  2  from 1 Claire to 0 Francis
+LOG: Transferred Vote #0005: 1 <2> 3  0  from 1 Claire to 2 Heather
+LOG: Dropped Candidate 1: Claire
+LOG: Transferred Vote #0014: 3 <0> 2  1  from 3 Viktor to 0 Francis
+LOG: Transferred Vote #0013: 3  1 <2> 0  from 3 Viktor to 2 Heather
+LOG: Transferred Vote #0012: 3  1 <2> 0  from 3 Viktor to 2 Heather
+LOG: Dropped Candidate 3: Viktor
+
+CASE 2: after 1: Claire dropped
+NUM COUNT %PERC S NAME
+  0     6  42.9 A Francis
+  1     -     - D Claire
+  2     8  57.1 A Heather
+  3     -     - D Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0014: 3 <0> 2  1 
+  #0006: 1 <0> 3  2 
+  #0004:<0> 2  3  1 
+  #0003:<0> 2  3  1 
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+6 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0012: 3  1 <2> 0 
+  #0013: 3  1 <2> 0 
+  #0005: 1 <2> 3  0 
+  #0007: 1 <2> 3  0 
+  #0011:<2> 1  3  0 
+  #0010:<2> 1  3  0 
+  #0009:<2> 1  3  0 
+  #0008:<2> 1  3  0 
+8 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_drop_minvote_candidates_5
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_drop_minvote_candidates_5'
+#+BEGIN_SRC sh
+IF_TEST("tally_drop_minvote_candidates_5"){
+    // Drop 3 minvotes candidate each with several
+    // votes. Tests that the dropping iteratively
+    // transfers votes from the dropped candidate
+    // to others and that multiple candidates are
+    // handled. 
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_MINVOTES, 0); // 0: 2 votes
+    tally_add(t,"Claire", CAND_ACTIVE,   0); // 1: 3 votes
+    tally_add(t,"Heather",CAND_MINVOTES, 0); // 2: 2 votes
+    tally_add(t,"Viktor", CAND_MINVOTES, 0); // 3: 2 votes
+    tally_add(t,"Edmond", CAND_ACTIVE,   0); // 4: 3 votes
+    tally_add_vote(t,vote_make( 1,0,0,1,2,3,4,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 2,0,0,4,1,2,3,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make( 3,0,1,0,2,3,4,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 4,0,1,0,2,3,4,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 5,0,1,0,2,3,4,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make( 6,0,2,1,0,3,4,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make( 7,0,2,1,0,3,4,NO_CANDIDATE)); // 2
+    tally_add_vote(t,vote_make( 8,0,3,2,1,0,4,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make( 9,0,3,2,1,0,4,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(10,0,4,3,2,1,0,NO_CANDIDATE)); // 4
+    tally_add_vote(t,vote_make(11,0,4,3,2,1,0,NO_CANDIDATE)); // 4
+    tally_add_vote(t,vote_make(12,0,4,3,2,1,0,NO_CANDIDATE)); // 4
+    printf("CASE 1: before drop minvotes\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    tally_drop_minvote_candidates(t); // Francis+Heather+Viktor dropped
+    printf("\nCASE 2: after 3 candidates dropped\n");
+    tally_print_table(t);
+    tally_print_votes(t);
+    printf("\nCASE 3: freeing tally\n");
+    tally_free(t);
+    printf("DONE\n");
+}
+---OUTPUT---
+CASE 1: before drop minvotes
+NUM COUNT %PERC S NAME
+  0     2  16.7 M Francis
+  1     3  25.0 A Claire
+  2     2  16.7 M Heather
+  3     2  16.7 M Viktor
+  4     3  25.0 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 4  1  2  3 
+  #0001:<0> 1  2  3  4 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0005:<1> 0  2  3  4 
+  #0004:<1> 0  2  3  4 
+  #0003:<1> 0  2  3  4 
+3 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0007:<2> 1  0  3  4 
+  #0006:<2> 1  0  3  4 
+2 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0009:<3> 2  1  0  4 
+  #0008:<3> 2  1  0  4 
+2 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0012:<4> 3  2  1  0 
+  #0011:<4> 3  2  1  0 
+  #0010:<4> 3  2  1  0 
+3 votes total
+LOG: Transferred Vote #0002: 0 <4> 1  2  3  from 0 Francis to 4 Edmond
+LOG: Transferred Vote #0001: 0 <1> 2  3  4  from 0 Francis to 1 Claire
+LOG: Dropped Candidate 0: Francis
+LOG: Transferred Vote #0007: 2 <1> 0  3  4  from 2 Heather to 1 Claire
+LOG: Transferred Vote #0006: 2 <1> 0  3  4  from 2 Heather to 1 Claire
+LOG: Dropped Candidate 2: Heather
+LOG: Transferred Vote #0009: 3  2 <1> 0  4  from 3 Viktor to 1 Claire
+LOG: Transferred Vote #0008: 3  2 <1> 0  4  from 3 Viktor to 1 Claire
+LOG: Dropped Candidate 3: Viktor
+
+CASE 2: after 3 candidates dropped
+NUM COUNT %PERC S NAME
+  0     -     - D Francis
+  1     8  66.7 A Claire
+  2     -     - D Heather
+  3     -     - D Viktor
+  4     4  33.3 A Edmond
+VOTES FOR CANDIDATE 0: Francis
+0 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0008: 3  2 <1> 0  4 
+  #0009: 3  2 <1> 0  4 
+  #0006: 2 <1> 0  3  4 
+  #0007: 2 <1> 0  3  4 
+  #0001: 0 <1> 2  3  4 
+  #0005:<1> 0  2  3  4 
+  #0004:<1> 0  2  3  4 
+  #0003:<1> 0  2  3  4 
+8 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+VOTES FOR CANDIDATE 4: Edmond
+  #0002: 0 <4> 1  2  3 
+  #0012:<4> 3  2  1  0 
+  #0011:<4> 3  2  1  0 
+  #0010:<4> 3  2  1  0 
+4 votes total
+
+CASE 3: freeing tally
+DONE
+#+END_SRC
+
+* tally_election_1
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_election_1'
+#+BEGIN_SRC sh
+IF_TEST("tally_election_1"){
+    // 2 candidates, Round 1 determines the
+    // minvotes for one leaving the other as active
+    // and the winner.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,0); // 0, 4 votes
+    tally_add(t,"Claire", CAND_ACTIVE,0); // 1, 2 votes
+    tally_add_vote(t,vote_make(1,0,0,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(2,0,0,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(3,0,0,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(4,0,0,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(5,0,1,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make(6,0,1,0,NO_CANDIDATE)); // 1
+    tally_election(t);
+    tally_free(t);
+}
+---OUTPUT---
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     4  66.7 A Francis
+  1     2  33.3 A Claire
+VOTES FOR CANDIDATE 0: Francis
+  #0004:<0> 1 
+  #0003:<0> 1 
+  #0002:<0> 1 
+  #0001:<0> 1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0006:<1> 0 
+  #0005:<1> 0 
+2 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 1: Claire
+Winner: Francis (candidate 0)
+#+END_SRC
+
+* tally_election_2
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_election_2'
+#+BEGIN_SRC sh
+IF_TEST("tally_election_2"){
+    // Round 1 drops 1 candidate. Round 2
+    // determines winner 1: Claire
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE,0); // 0, 2 votes
+    tally_add(t,"Claire", CAND_ACTIVE,0); // 1, 2 votes
+    tally_add(t,"Heather",CAND_ACTIVE,0); // 2, 1 votes
+    tally_add(t,"Viktor", CAND_ACTIVE,0); // 3, 2 votes
+    tally_add_vote(t,vote_make(1,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(2,0,0,2,3,1,NO_CANDIDATE)); // 0
+    tally_add_vote(t,vote_make(3,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make(4,0,1,2,3,0,NO_CANDIDATE)); // 1
+    tally_add_vote(t,vote_make(5,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(6,0,3,1,2,0,NO_CANDIDATE)); // 3
+    tally_add_vote(t,vote_make(7,0,2,1,3,0,NO_CANDIDATE)); // 2
+    tally_election(t);
+    tally_free(t);
+}
+---OUTPUT---
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     2  28.6 A Francis
+  1     2  28.6 A Claire
+  2     1  14.3 A Heather
+  3     2  28.6 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0004:<1> 2  3  0 
+  #0003:<1> 2  3  0 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0007:<2> 1  3  0 
+1 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0006:<3> 1  2  0 
+  #0005:<3> 1  2  0 
+2 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 2: Heather
+=== ROUND 2 ===
+LOG: Transferred Vote #0007: 2 <1> 3  0  from 2 Heather to 1 Claire
+LOG: Dropped Candidate 2: Heather
+NUM COUNT %PERC S NAME
+  0     2  28.6 A Francis
+  1     3  42.9 A Claire
+  2     -     - D Heather
+  3     2  28.6 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002:<0> 2  3  1 
+  #0001:<0> 2  3  1 
+2 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0007: 2 <1> 3  0 
+  #0004:<1> 2  3  0 
+  #0003:<1> 2  3  0 
+3 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0006:<3> 1  2  0 
+  #0005:<3> 1  2  0 
+2 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 0: Francis
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+Winner: Claire (candidate 1)
+#+END_SRC
+
+* tally_election_3
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_election_3'
+#+BEGIN_SRC sh
+IF_TEST("tally_election_3"){
+    // Run the sample election described in the
+    // project spec which takes 3 rounds and
+    // results in Francis winning. Full logging is
+    // enabled.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,3,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 5,0,1,0,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,0,2,1,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 8,0,2,1,0,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,3,0,2,1,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(11,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(12,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_election(t);
+    tally_free(t);
+}
+---OUTPUT---
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     4  33.3 A Francis
+  1     2  16.7 A Claire
+  2     5  41.7 A Heather
+  3     1   8.3 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0011:<0> 1  2  3 
+  #0007:<0> 1  2  3 
+  #0006:<0> 2  1  3 
+  #0001:<0> 3  2  1 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0005:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0012:<2> 0  1  3 
+  #0009:<2> 0  1  3 
+  #0008:<2> 1  0  3 
+  #0004:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+5 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0010:<3> 0  2  1 
+1 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+=== ROUND 2 ===
+LOG: Transferred Vote #0010: 3 <0> 2  1  from 3 Viktor to 0 Francis
+LOG: Dropped Candidate 3: Viktor
+NUM COUNT %PERC S NAME
+  0     5  41.7 A Francis
+  1     2  16.7 A Claire
+  2     5  41.7 A Heather
+  3     -     - D Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0010: 3 <0> 2  1 
+  #0011:<0> 1  2  3 
+  #0007:<0> 1  2  3 
+  #0006:<0> 2  1  3 
+  #0001:<0> 3  2  1 
+5 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0005:<1> 0  2  3 
+  #0002:<1> 0  2  3 
+2 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0012:<2> 0  1  3 
+  #0009:<2> 0  1  3 
+  #0008:<2> 1  0  3 
+  #0004:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+5 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: MIN VOTE count is 2
+LOG: MIN VOTE COUNT for candidate 1: Claire
+=== ROUND 3 ===
+LOG: Transferred Vote #0005: 1 <0> 2  3  from 1 Claire to 0 Francis
+LOG: Transferred Vote #0002: 1 <0> 2  3  from 1 Claire to 0 Francis
+LOG: Dropped Candidate 1: Claire
+NUM COUNT %PERC S NAME
+  0     7  58.3 A Francis
+  1     -     - D Claire
+  2     5  41.7 A Heather
+  3     -     - D Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0002: 1 <0> 2  3 
+  #0005: 1 <0> 2  3 
+  #0010: 3 <0> 2  1 
+  #0011:<0> 1  2  3 
+  #0007:<0> 1  2  3 
+  #0006:<0> 2  1  3 
+  #0001:<0> 3  2  1 
+7 votes total
+VOTES FOR CANDIDATE 1: Claire
+0 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0012:<2> 0  1  3 
+  #0009:<2> 0  1  3 
+  #0008:<2> 1  0  3 
+  #0004:<2> 1  0  3 
+  #0003:<2> 1  0  3 
+5 votes total
+VOTES FOR CANDIDATE 3: Viktor
+0 votes total
+LOG: MIN VOTE count is 5
+LOG: MIN VOTE COUNT for candidate 2: Heather
+Winner: Francis (candidate 0)
+#+END_SRC
+
+* tally_election_4
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_election_4'
+#+BEGIN_SRC sh
+IF_TEST("tally_election_4"){
+    // Round 1: Drop 1 minvote candidate. Round 2:
+    // determine that there is a 3-way tie which
+    // ends the election.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    tally_add(t,"Francis",CAND_ACTIVE, 0); // 0
+    tally_add(t,"Claire", CAND_ACTIVE, 0); // 1
+    tally_add(t,"Heather",CAND_ACTIVE, 0); // 2
+    tally_add(t,"Viktor", CAND_ACTIVE, 0); // 3
+    tally_add_vote(t,vote_make( 1,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 2,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 3,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 4,0,0,1,2,3,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 5,0,3,2,1,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 6,0,3,2,1,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 7,0,3,2,1,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 8,0,3,2,1,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make( 9,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(10,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(11,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(12,0,1,2,3,0,NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(13,0,2,1,3,0 NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(14,0,2,3,1,0 NO_CANDIDATE)); 
+    tally_add_vote(t,vote_make(15,0,2,0,1,3,NO_CANDIDATE)); 
+    tally_election(t);
+    tally_free(t);
+}
+---OUTPUT---
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     4  26.7 A Francis
+  1     4  26.7 A Claire
+  2     3  20.0 A Heather
+  3     4  26.7 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0004:<0> 1  2  3 
+  #0003:<0> 1  2  3 
+  #0002:<0> 1  2  3 
+  #0001:<0> 1  2  3 
+4 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0012:<1> 2  3  0 
+  #0011:<1> 2  3  0 
+  #0010:<1> 2  3  0 
+  #0009:<1> 2  3  0 
+4 votes total
+VOTES FOR CANDIDATE 2: Heather
+  #0015:<2> 0  1  3 
+  #0014:<2> 3  1 
+  #0013:<2> 1  3 
+3 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0008:<3> 2  1  0 
+  #0007:<3> 2  1  0 
+  #0006:<3> 2  1  0 
+  #0005:<3> 2  1  0 
+4 votes total
+LOG: MIN VOTE count is 3
+LOG: MIN VOTE COUNT for candidate 2: Heather
+=== ROUND 2 ===
+LOG: Transferred Vote #0015: 2 <0> 1  3  from 2 Heather to 0 Francis
+LOG: Transferred Vote #0014: 2 <3> 1  from 2 Heather to 3 Viktor
+LOG: Transferred Vote #0013: 2 <1> 3  from 2 Heather to 1 Claire
+LOG: Dropped Candidate 2: Heather
+NUM COUNT %PERC S NAME
+  0     5  33.3 A Francis
+  1     5  33.3 A Claire
+  2     -     - D Heather
+  3     5  33.3 A Viktor
+VOTES FOR CANDIDATE 0: Francis
+  #0015: 2 <0> 1  3 
+  #0004:<0> 1  2  3 
+  #0003:<0> 1  2  3 
+  #0002:<0> 1  2  3 
+  #0001:<0> 1  2  3 
+5 votes total
+VOTES FOR CANDIDATE 1: Claire
+  #0013: 2 <1> 3 
+  #0012:<1> 2  3  0 
+  #0011:<1> 2  3  0 
+  #0010:<1> 2  3  0 
+  #0009:<1> 2  3  0 
+5 votes total
+VOTES FOR CANDIDATE 2: Heather
+0 votes total
+VOTES FOR CANDIDATE 3: Viktor
+  #0014: 2 <3> 1 
+  #0008:<3> 2  1  0 
+  #0007:<3> 2  1  0 
+  #0006:<3> 2  1  0 
+  #0005:<3> 2  1  0 
+5 votes total
+LOG: MIN VOTE count is 5
+LOG: MIN VOTE COUNT for candidate 0: Francis
+LOG: MIN VOTE COUNT for candidate 1: Claire
+LOG: MIN VOTE COUNT for candidate 3: Viktor
+Multiway Tie Between:
+Francis (candidate 0)
+Claire (candidate 1)
+Viktor (candidate 3)
+#+END_SRC
+
+* tally_election_5
+See test code comments below for description of test.
+#+TESTY: program='./test_rcv_funcs tally_election_5'
+#+BEGIN_SRC sh
+IF_TEST("tally_election_5"){
+    // 8-candidate, 20-vote, multi-round
+    // election. 4 Rounds ending in a 4-way tie.
+    LOG_LEVEL=LOG_VOTE_TRANSFERS;
+    tally_t *t = malloc(sizeof(tally_t)); tally_reset(t);
+    char *cands[] = {"A","B","C","D","E","F","G","H",NULL};
+    for(int i=0; cands[i]!=NULL; i++){ // 8 candidates
+      tally_add(t,cands[i],CAND_ACTIVE,0);
+    }
+    tally_add_vote(t,vote_make( 1,0,3,6,1,0,4,2,5,7,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 2,0,7,3,2,1,0,6,5,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 3,0,0,4,6,2,7,1,5,3,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 4,0,4,0,3,6,2,1,7,5,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 5,0,2,5,0,1,4,7,3,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 6,0,7,0,6,3,4,5,1,2,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 7,0,0,5,3,4,1,7,2,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 8,0,3,4,0,7,6,2,5,1,NO_CANDIDATE));
+    tally_add_vote(t,vote_make( 9,0,7,5,2,3,1,0,4,6,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(10,0,1,6,5,2,3,4,7,0,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(11,0,2,0,3,7,1,5,6,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(12,0,2,1,4,6,7,0,5,3,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(13,0,5,0,4,3,1,6,2,7,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(14,0,4,1,3,5,2,6,7,0,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(15,0,0,1,3,4,6,5,7,2,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(16,0,7,5,2,1,3,6,4,0,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(17,0,7,5,1,3,2,0,6,4,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(18,0,3,0,2,6,7,4,5,1,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(19,0,3,6,7,4,1,0,2,5,NO_CANDIDATE));
+    tally_add_vote(t,vote_make(20,0,4,2,3,0,6,1,5,7,NO_CANDIDATE));
+    tally_election(t);
+    tally_free(t);
+}
+---OUTPUT---
+=== ROUND 1 ===
+NUM COUNT %PERC S NAME
+  0     3  15.0 A A
+  1     1   5.0 A B
+  2     3  15.0 A C
+  3     4  20.0 A D
+  4     3  15.0 A E
+  5     1   5.0 A F
+  6     0   0.0 A G
+  7     5  25.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0015:<0> 1  3  4  6  5  7  2 
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+3 votes total
+VOTES FOR CANDIDATE 1: B
+  #0010:<1> 6  5  2  3  4  7  0 
+1 votes total
+VOTES FOR CANDIDATE 2: C
+  #0012:<2> 1  4  6  7  0  5  3 
+  #0011:<2> 0  3  7  1  5  6  4 
+  #0005:<2> 5  0  1  4  7  3  6 
+3 votes total
+VOTES FOR CANDIDATE 3: D
+  #0019:<3> 6  7  4  1  0  2  5 
+  #0018:<3> 0  2  6  7  4  5  1 
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+4 votes total
+VOTES FOR CANDIDATE 4: E
+  #0020:<4> 2  3  0  6  1  5  7 
+  #0014:<4> 1  3  5  2  6  7  0 
+  #0004:<4> 0  3  6  2  1  7  5 
+3 votes total
+VOTES FOR CANDIDATE 5: F
+  #0013:<5> 0  4  3  1  6  2  7 
+1 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0017:<7> 5  1  3  2  0  6  4 
+  #0016:<7> 5  2  1  3  6  4  0 
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+5 votes total
+LOG: MIN VOTE count is 0
+LOG: MIN VOTE COUNT for candidate 6: G
+=== ROUND 2 ===
+LOG: Dropped Candidate 6: G
+NUM COUNT %PERC S NAME
+  0     3  15.0 A A
+  1     1   5.0 A B
+  2     3  15.0 A C
+  3     4  20.0 A D
+  4     3  15.0 A E
+  5     1   5.0 A F
+  6     -     - D G
+  7     5  25.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0015:<0> 1  3  4  6  5  7  2 
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+3 votes total
+VOTES FOR CANDIDATE 1: B
+  #0010:<1> 6  5  2  3  4  7  0 
+1 votes total
+VOTES FOR CANDIDATE 2: C
+  #0012:<2> 1  4  6  7  0  5  3 
+  #0011:<2> 0  3  7  1  5  6  4 
+  #0005:<2> 5  0  1  4  7  3  6 
+3 votes total
+VOTES FOR CANDIDATE 3: D
+  #0019:<3> 6  7  4  1  0  2  5 
+  #0018:<3> 0  2  6  7  4  5  1 
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+4 votes total
+VOTES FOR CANDIDATE 4: E
+  #0020:<4> 2  3  0  6  1  5  7 
+  #0014:<4> 1  3  5  2  6  7  0 
+  #0004:<4> 0  3  6  2  1  7  5 
+3 votes total
+VOTES FOR CANDIDATE 5: F
+  #0013:<5> 0  4  3  1  6  2  7 
+1 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0017:<7> 5  1  3  2  0  6  4 
+  #0016:<7> 5  2  1  3  6  4  0 
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+5 votes total
+LOG: MIN VOTE count is 1
+LOG: MIN VOTE COUNT for candidate 1: B
+LOG: MIN VOTE COUNT for candidate 5: F
+=== ROUND 3 ===
+LOG: Transferred Vote #0010: 1  6  5 <2> 3  4  7  0  from 1 B to 2 C
+LOG: Dropped Candidate 1: B
+LOG: Transferred Vote #0013: 5 <0> 4  3  1  6  2  7  from 5 F to 0 A
+LOG: Dropped Candidate 5: F
+NUM COUNT %PERC S NAME
+  0     4  20.0 A A
+  1     -     - D B
+  2     4  20.0 A C
+  3     4  20.0 A D
+  4     3  15.0 A E
+  5     -     - D F
+  6     -     - D G
+  7     5  25.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0013: 5 <0> 4  3  1  6  2  7 
+  #0015:<0> 1  3  4  6  5  7  2 
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+4 votes total
+VOTES FOR CANDIDATE 1: B
+0 votes total
+VOTES FOR CANDIDATE 2: C
+  #0010: 1  6  5 <2> 3  4  7  0 
+  #0012:<2> 1  4  6  7  0  5  3 
+  #0011:<2> 0  3  7  1  5  6  4 
+  #0005:<2> 5  0  1  4  7  3  6 
+4 votes total
+VOTES FOR CANDIDATE 3: D
+  #0019:<3> 6  7  4  1  0  2  5 
+  #0018:<3> 0  2  6  7  4  5  1 
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+4 votes total
+VOTES FOR CANDIDATE 4: E
+  #0020:<4> 2  3  0  6  1  5  7 
+  #0014:<4> 1  3  5  2  6  7  0 
+  #0004:<4> 0  3  6  2  1  7  5 
+3 votes total
+VOTES FOR CANDIDATE 5: F
+0 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0017:<7> 5  1  3  2  0  6  4 
+  #0016:<7> 5  2  1  3  6  4  0 
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+5 votes total
+LOG: MIN VOTE count is 3
+LOG: MIN VOTE COUNT for candidate 4: E
+=== ROUND 4 ===
+LOG: Transferred Vote #0020: 4 <2> 3  0  6  1  5  7  from 4 E to 2 C
+LOG: Transferred Vote #0014: 4  1 <3> 5  2  6  7  0  from 4 E to 3 D
+LOG: Transferred Vote #0004: 4 <0> 3  6  2  1  7  5  from 4 E to 0 A
+LOG: Dropped Candidate 4: E
+NUM COUNT %PERC S NAME
+  0     5  25.0 A A
+  1     -     - D B
+  2     5  25.0 A C
+  3     5  25.0 A D
+  4     -     - D E
+  5     -     - D F
+  6     -     - D G
+  7     5  25.0 A H
+VOTES FOR CANDIDATE 0: A
+  #0004: 4 <0> 3  6  2  1  7  5 
+  #0013: 5 <0> 4  3  1  6  2  7 
+  #0015:<0> 1  3  4  6  5  7  2 
+  #0007:<0> 5  3  4  1  7  2  6 
+  #0003:<0> 4  6  2  7  1  5  3 
+5 votes total
+VOTES FOR CANDIDATE 1: B
+0 votes total
+VOTES FOR CANDIDATE 2: C
+  #0020: 4 <2> 3  0  6  1  5  7 
+  #0010: 1  6  5 <2> 3  4  7  0 
+  #0012:<2> 1  4  6  7  0  5  3 
+  #0011:<2> 0  3  7  1  5  6  4 
+  #0005:<2> 5  0  1  4  7  3  6 
+5 votes total
+VOTES FOR CANDIDATE 3: D
+  #0014: 4  1 <3> 5  2  6  7  0 
+  #0019:<3> 6  7  4  1  0  2  5 
+  #0018:<3> 0  2  6  7  4  5  1 
+  #0008:<3> 4  0  7  6  2  5  1 
+  #0001:<3> 6  1  0  4  2  5  7 
+5 votes total
+VOTES FOR CANDIDATE 4: E
+0 votes total
+VOTES FOR CANDIDATE 5: F
+0 votes total
+VOTES FOR CANDIDATE 6: G
+0 votes total
+VOTES FOR CANDIDATE 7: H
+  #0017:<7> 5  1  3  2  0  6  4 
+  #0016:<7> 5  2  1  3  6  4  0 
+  #0009:<7> 5  2  3  1  0  4  6 
+  #0006:<7> 0  6  3  4  5  1  2 
+  #0002:<7> 3  2  1  0  6  5  4 
+5 votes total
+LOG: MIN VOTE count is 5
+LOG: MIN VOTE COUNT for candidate 0: A
+LOG: MIN VOTE COUNT for candidate 2: C
+LOG: MIN VOTE COUNT for candidate 3: D
+LOG: MIN VOTE COUNT for candidate 7: H
+Multiway Tie Between:
+A (candidate 0)
+C (candidate 2)
+D (candidate 3)
+H (candidate 7)
+#+END_SRC
+
